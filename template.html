@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<meta name="description" content="__DESC__">
+<meta property="og:title" content="__TITLE__">
+<meta property="og:description" content="__DESC__">
+<meta property="og:type" content="website">
+<link rel="canonical" href="__CANONICAL__">
+__HEADEXTRA__
+<meta name="theme-color" content="#090f1b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: a Sunday-night stadium. A floodlit, mowed-stripe field holds the game of the week;
+   every game gets a 270-degree Thrill gauge; games are grouped by verdict so the eye lands on
+   "Must watch" first. One column on phones, two on desktop. */
+:root {
+  --bg: #f1f3f6;
+  --surface: #ffffff;
+  --surface-2: #f6f8fb;
+  --ink: #0d1626;
+  --muted: #5a6678;
+  --line: #dde2ea;
+  --accent: #b98208;
+  --accent-ink: #1b1300;
+  --must: #e5461f;
+  --worth: #138654;
+  --fans: #3466d4;
+  --skip: #7b8596;
+  --shadow: 0 1px 2px rgba(13, 22, 38, .05), 0 8px 24px rgba(13, 22, 38, .07);
+  --shadow-lift: 0 2px 4px rgba(13, 22, 38, .06), 0 16px 36px rgba(13, 22, 38, .12);
+  --display: "Big Shoulders Display", "Arial Narrow", "Roboto Condensed", Impact, sans-serif;
+  --body: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #090f1b; --surface: #111a2b; --surface-2: #0d1524; --ink: #edf1f7; --muted: #8e9bb0; --line: #1f2b42;
+    --accent: #f5bd3a; --must: #ff6a3d; --worth: #35c486; --fans: #6f9bff; --skip: #8994a8;
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 10px 30px rgba(0,0,0,.3); --shadow-lift: 0 2px 6px rgba(0,0,0,.4), 0 18px 40px rgba(0,0,0,.45);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #090f1b; --surface: #111a2b; --surface-2: #0d1524; --ink: #edf1f7; --muted: #8e9bb0; --line: #1f2b42;
+  --accent: #f5bd3a; --must: #ff6a3d; --worth: #35c486; --fans: #6f9bff; --skip: #8994a8;
+  --shadow: 0 1px 2px rgba(0,0,0,.35), 0 10px 30px rgba(0,0,0,.3); --shadow-lift: 0 2px 6px rgba(0,0,0,.4), 0 18px 40px rgba(0,0,0,.45);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { overflow-x: hidden; background: var(--bg); color: var(--ink); font: 400 16px/1.55 var(--body); -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+.must { --c: var(--must); } .worth { --c: var(--worth); } .fans { --c: var(--fans); } .skip { --c: var(--skip); }
+
+/* Header */
+header.top { position: sticky; top: 0; z-index: 30; background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: saturate(1.4) blur(12px); -webkit-backdrop-filter: saturate(1.4) blur(12px); border-bottom: 1px solid var(--line); }
+.top .wrap { display: flex; align-items: center; gap: 10px; height: 64px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-right: auto; }
+.mark { width: 30px; height: 30px; flex: none; }
+.wordmark { font: 900 28px/1 var(--display); letter-spacing: .03em; text-transform: uppercase; }
+.wordmark span { color: var(--accent); }
+.nav { display: flex; gap: 4px; margin-right: 6px; }
+.nav a { text-decoration: none; font-size: 14px; font-weight: 600; color: var(--muted); padding: 8px 12px; border-radius: 999px; }
+.nav a:hover { color: var(--ink); background: var(--surface); }
+.iconbtn { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface);
+  border-radius: 999px; height: 38px; padding: 0 14px; font-size: 14px; font-weight: 700; }
+.iconbtn:hover { border-color: var(--muted); }
+.iconbtn svg { width: 16px; height: 16px; }
+
+/* Intro */
+.intro { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 28px; align-items: end; padding: 34px 0 10px; }
+.kicker { font: 800 13px var(--display); letter-spacing: .18em; text-transform: uppercase; color: var(--accent); }
+.punch-line { margin: 6px 0 10px; font: 900 clamp(48px, 8.2vw, 96px)/.86 var(--display); text-transform: uppercase; letter-spacing: .005em; text-wrap: balance; }
+.punch-line em { font-style: normal; color: var(--accent); }
+.punch-sub { margin: 0; color: var(--muted); font-size: 17px; max-width: 46ch; }
+.stats { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 18px; }
+.stat b { display: block; font: 900 30px/1 var(--display); font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+.key { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 18px; box-shadow: var(--shadow); display: grid; gap: 10px; }
+.key h2 { margin: 0; font: 800 15px var(--display); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.key-row { display: grid; grid-template-columns: 112px 1fr 46px; gap: 12px; align-items: center; font-size: 14px; }
+.key-row strong { font-weight: 700; color: var(--c); }
+.key-bar { height: 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); overflow: hidden; }
+.key-bar i { display: block; height: 100%; background: var(--c); border-radius: 999px; }
+.key-row em { font-style: normal; font: 700 15px var(--display); text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* Controls */
+.controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 22px 0 8px; padding: 10px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); }
+.controls select { font: 700 14px var(--body); color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; height: 38px; padding: 0 10px; }
+.weeks { display: flex; gap: 4px; overflow-x: auto; flex: 1 1 300px; min-width: 0; scrollbar-width: none; }
+.weeks::-webkit-scrollbar { display: none; }
+.wk { flex: none; border: 0; background: transparent; border-radius: 10px; min-width: 42px; height: 38px; padding: 0 10px;
+  font: 800 16px var(--display); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.wk:hover { background: var(--surface-2); color: var(--ink); }
+.wk[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.seg { display: inline-flex; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
+.seg button { border: 0; background: none; height: 30px; padding: 0 12px; font-size: 13px; font-weight: 700; color: var(--muted); border-radius: 7px; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+
+/* League tabs */
+.leagues { display: inline-flex; gap: 6px; margin: 26px 0 0; padding: 5px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
+.leagues button { border: 0; background: none; height: 40px; min-width: 92px; padding: 0 18px; border-radius: 10px; font: 900 20px var(--display); letter-spacing: .06em; color: var(--muted); }
+.leagues button:hover { color: var(--ink); }
+.leagues button[aria-selected="true"] { background: var(--ink); color: var(--bg); }
+.controls { margin-top: 10px !important; }
+.kick .lg { font-weight: 800; color: var(--ink); letter-spacing: .1em; padding: 1px 6px; border: 1px solid var(--line); border-radius: 5px; font-size: 10.5px; }
+.weeks.nba .wk { font-size: 14px; min-width: 64px; }
+/* Hardwood variant for NBA */
+.feature.nba { background:
+    radial-gradient(60% 80% at 50% -30%, rgba(255, 236, 200, .42), transparent 60%),
+    repeating-linear-gradient(90deg, #8a5a2b 0 3.2%, #93622f 3.2% 6.4%, #855528 6.4% 9.6%),
+    #8a5a2b; }
+.feature.nba::after { background: linear-gradient(180deg, rgba(30,15,5,.15) 10%, rgba(30,15,5,.7)); }
+.feature.nba p { color: #f5e6d6; }
+
+/* Watched, votes, team and best pages, docs */
+a.team { text-decoration: none; color: inherit; }
+a.team:hover b { color: var(--accent); }
+.btn.on { border-color: var(--worth); color: var(--worth); }
+.vote { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13.5px; font-weight: 700; padding: 10px 12px; border-radius: 12px;
+  background: var(--surface-2); border: 1px solid var(--line); }
+.vote.done { font-weight: 600; color: var(--muted); }
+.vote .tally { margin-left: auto; color: var(--muted); font-weight: 600; }
+.vote .tally b { color: var(--ink); }
+.linkish { border: 0; background: none; padding: 0; font-size: 13px; font-weight: 700; color: var(--accent); text-decoration: underline; }
+.group.watched .card { opacity: .82; }
+.best-link { text-decoration: none; }
+.teamhead { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 20px; align-items: center; margin: 6px 0 10px; padding: 24px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow); border-top: 6px solid var(--tc, var(--accent)); }
+.teamhead h1 { margin: 4px 0 6px; font: 900 clamp(34px, 5.5vw, 60px)/.92 var(--display); text-transform: uppercase; text-wrap: balance; }
+.teamhead p { margin: 0; color: var(--muted); }
+.teamtools { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.teamtools select { font: 700 14px var(--body); color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; height: 36px; padding: 0 10px; }
+.chip.big { width: 64px; height: 46px; font-size: 16px; border-radius: 10px; }
+.mlist { display: grid; gap: 8px; }
+.mrow { display: grid; grid-template-columns: auto 150px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 12px 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 14px; text-decoration: none; color: inherit; border-left: 5px solid var(--ac); }
+.mrow:hover { border-color: var(--muted); border-left-color: var(--ac); }
+.mrow.norank { grid-template-columns: 150px minmax(0, 1fr) auto; }
+.mrow .rank { font: 900 26px var(--display); width: 36px; text-align: center; color: var(--muted); }
+.ranked .mrow:nth-child(-n+3) .rank { color: var(--accent); }
+.mwhen { font: 800 15px var(--display); text-transform: uppercase; letter-spacing: .03em; display: grid; }
+.mwhen small { font: 600 12px var(--body); color: var(--muted); text-transform: none; letter-spacing: 0; }
+.mteams { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font: 800 19px var(--display); text-transform: uppercase; }
+.mteams .chip { width: 30px; height: 20px; font-size: 10px; }
+.mteams i { font: 600 11px var(--body); color: var(--muted); text-transform: lowercase; font-style: normal; }
+.mteams .seen { font: 700 11px var(--body); color: var(--worth); font-style: normal; text-transform: none; }
+.mscore { display: flex; align-items: center; gap: 10px; }
+.mscore b { font: 900 30px var(--display); color: var(--c); font-variant-numeric: tabular-nums; min-width: 40px; text-align: right; }
+.doc { max-width: 760px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 30px; box-shadow: var(--shadow); }
+.doc h1 { margin: 0 0 10px; font: 900 44px/.95 var(--display); text-transform: uppercase; }
+.doc h2 { margin: 26px 0 6px; font: 800 22px var(--display); text-transform: uppercase; letter-spacing: .03em; }
+.doc p { margin: 0 0 10px; color: color-mix(in srgb, var(--ink) 85%, var(--muted)); }
+.doc a { color: var(--accent); }
+.doc .feedback { margin-top: 20px; box-shadow: none; }
+@media (max-width: 760px) {
+  .teamhead { grid-template-columns: 1fr; }
+  .teamtools { justify-content: flex-start; }
+  .mrow { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .mrow.norank { grid-template-columns: minmax(0, 1fr) auto; }
+  .mrow .mwhen { display: none; }
+  .mscore .pill { display: none; }
+}
+
+/* Support ladder */
+.ladder { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; font-size: 14px; color: var(--muted); }
+.ladder li { display: grid; grid-template-columns: 70px 1fr; gap: 10px; align-items: baseline; }
+.ladder li span { font: 800 15px var(--display); color: var(--ink); font-variant-numeric: tabular-nums; }
+.ladder li.done { color: var(--ink); }
+.ladder li.done span::after { content: " ✓"; color: var(--worth); }
+.ladder li.next { color: var(--ink); font-weight: 700; }
+.ladder li.next span { color: var(--accent); }
+.fans-count { font-size: 14px; }
+.pays { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; font-size: 14.5px; color: var(--ink); }
+.pays li { display: grid; grid-template-columns: 14px 1fr; gap: 8px; }
+.pays li::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-top: 8px; }
+
+/* Rating badges, beta, soccer */
+.rb { margin-left: auto; font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; cursor: help; }
+.rb.early { color: var(--fans); background: color-mix(in srgb, var(--fans) 14%, transparent); }
+.rb.beta { color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.leagues button sup { font: 800 9px var(--body); letter-spacing: .06em; margin-left: 3px; color: var(--accent); vertical-align: 8px; text-transform: uppercase; }
+.leagues button[aria-selected="true"] sup { color: var(--accent); }
+.leagues { flex-wrap: wrap; }
+.feature.soccer { background:
+    radial-gradient(70% 90% at 50% -30%, rgba(255, 255, 255, .28), transparent 60%),
+    repeating-linear-gradient(180deg, #1c6b35 0 12.5%, #18602f 12.5% 25%), #18602f; }
+.soon-league { margin: 18px 0 8px; background: var(--surface); border: 1px dashed color-mix(in srgb, var(--accent) 45%, var(--line)); border-radius: 22px;
+  padding: 34px 30px; display: grid; gap: 12px; justify-items: start; }
+.soon-league h3 { margin: 0; font: 900 clamp(30px, 5vw, 48px)/.95 var(--display); text-transform: uppercase; text-wrap: balance; }
+.soon-league p { margin: 0; color: var(--muted); max-width: 60ch; }
+
+/* Announcement + roadmap + feedback */
+.announce { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; padding: 9px 20px; text-decoration: none; font-size: 13.5px; font-weight: 600;
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg)); border-bottom: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line)); color: var(--ink); text-align: center; }
+.announce:hover span:last-child { text-decoration: underline; }
+.road { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.road li { display: grid; gap: 1px; padding-left: 16px; position: relative; }
+.road li::before { content: ""; position: absolute; left: 0; top: 7px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+.road b { font-size: 15px; }
+.road span { font-size: 13.5px; color: var(--muted); }
+.feedback { margin: 16px 0 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 28px; background: var(--surface); border: 1px solid var(--line);
+  border-radius: 18px; padding: 26px; box-shadow: var(--shadow); }
+.feedback h3 { margin: 6px 0 8px; font: 900 34px/1 var(--display); text-transform: uppercase; }
+.feedback p { margin: 0; color: var(--muted); }
+.ideas { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.idea { border: 1px dashed var(--line); background: var(--surface-2); border-radius: 999px; padding: 7px 12px; font-size: 13px; font-weight: 700; color: var(--muted); }
+.idea:hover, .idea[aria-pressed="true"] { border-style: solid; border-color: var(--accent); color: var(--ink); }
+.fb-form { display: grid; gap: 8px; }
+.fb-form label { font-size: 13px; font-weight: 700; margin-top: 4px; }
+.fb-form .opt { font-weight: 500; color: var(--muted); }
+.fb-form select, .fb-form textarea, .fb-form input { font: 15px var(--body); color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; width: 100%; }
+.fb-form textarea { resize: vertical; min-height: 110px; }
+.fb-form select:focus, .fb-form textarea:focus, .fb-form input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.fb-err { margin: 0; min-height: 18px; font-size: 13px; color: var(--must); }
+.fb-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.fb-note { font-size: 13.5px; color: var(--muted); }
+.fb-note.ok { color: var(--worth); font-weight: 700; }
+@media (max-width: 760px) { .feedback { grid-template-columns: 1fr; padding: 20px; } }
+
+/* Descriptions switch */
+.toggle { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--surface-2); border-radius: 10px; height: 38px; padding: 0 12px; font-size: 13px; font-weight: 700; color: var(--muted); }
+.toggle .sw { width: 30px; height: 18px; border-radius: 999px; background: color-mix(in srgb, var(--ink) 18%, transparent); position: relative; transition: background .15s; }
+.toggle .sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--surface); transition: transform .15s; }
+.toggle[aria-checked="true"] { color: var(--ink); }
+.toggle[aria-checked="true"] .sw { background: var(--accent); }
+.toggle[aria-checked="true"] .sw::after { transform: translateX(12px); }
+.btn[data-blurb][aria-pressed="true"] { border-color: var(--accent); }
+
+/* Gauge */
+.gauge { position: relative; display: grid; place-items: center; flex: none; }
+.gauge svg { width: 100%; height: 100%; display: block; }
+.gauge .trk { stroke: color-mix(in srgb, var(--ink) 10%, transparent); }
+.gauge .val { stroke: var(--c); }
+.gauge .n { position: absolute; inset: 0; display: grid; place-items: center; font: 900 var(--gs, 34px)/1 var(--display); font-variant-numeric: tabular-nums; padding-bottom: 4%; }
+@media (prefers-reduced-motion: no-preference) {
+  .gauge .val { animation: sweep 1s cubic-bezier(.2,.8,.2,1) both; }
+}
+@keyframes sweep { from { stroke-dasharray: 0 251.33; } }
+
+/* Game of the week */
+.feature { position: relative; margin: 18px 0 8px; border-radius: 24px; overflow: hidden; color: #f3f6f2; box-shadow: var(--shadow-lift);
+  background:
+    radial-gradient(60% 80% at 8% -20%, rgba(255, 236, 180, .38), transparent 60%),
+    radial-gradient(60% 80% at 92% -20%, rgba(255, 236, 180, .30), transparent 60%),
+    repeating-linear-gradient(90deg, #13502d 0 10%, #0f4426 10% 20%),
+    #0f4426; }
+.feature::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(4,16,9,0) 30%, rgba(4,16,9,.55)); pointer-events: none; }
+.feature-inner { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: center; padding: 30px 32px; }
+.feature .kicker { color: #ffd36b; }
+.feature h2 { margin: 6px 0 12px; font: 900 clamp(40px, 6.4vw, 72px)/.9 var(--display); text-transform: uppercase; text-wrap: balance; }
+.feature h2 .at { font-weight: 600; font-size: .45em; opacity: .65; vertical-align: .3em; margin: 0 .15em; letter-spacing: .1em; }
+.feature p { margin: 0; color: #dbe7de; font-size: 17px; max-width: 52ch; }
+.feature .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 18px; }
+.feature .tag { border-color: rgba(255,255,255,.3); color: #eef4ef; background: rgba(255,255,255,.06); }
+.feature .cta { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 999px; background: #ffd36b; color: #1b1300;
+  font-weight: 800; font-size: 14px; text-decoration: none; }
+.feature .gauge { width: 190px; height: 190px; --gs: 64px; }
+.feature .gauge .trk { stroke: rgba(255,255,255,.16); }
+.feature .verdict { display: grid; justify-items: center; gap: 8px; }
+.feature .pill { background: rgba(255,255,255,.14); color: #fff; }
+.chips { display: flex; gap: 8px; margin-bottom: 4px; }
+.chip { width: 34px; height: 24px; border-radius: 6px; display: grid; place-items: center; font: 800 11px var(--body); color: #fff; letter-spacing: .02em; flex: none;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
+
+/* Sections and cards */
+.group { margin-top: 30px; }
+.group-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; margin-bottom: 14px; }
+.group-head h3 { margin: 0; font: 900 28px/1 var(--display); text-transform: uppercase; letter-spacing: .02em; display: flex; align-items: center; gap: 10px; }
+.group-head h3::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 4px color-mix(in srgb, var(--c) 20%, transparent); }
+.group-head span { color: var(--muted); font-size: 14px; font-weight: 600; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 480px), 1fr)); gap: 16px; }
+.grid > * { min-width: 0; }
+.card { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px 20px 16px; display: grid; gap: 14px;
+  box-shadow: var(--shadow); overflow: hidden; transition: transform .15s ease, box-shadow .15s ease; }
+.card::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 4px; background: linear-gradient(90deg, var(--ac) 0 50%, var(--hc) 50% 100%); }
+@media (hover: hover) { .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lift); } }
+.card.mine { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+.card-main { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: center; }
+.kick { font-size: 12px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); display: flex; gap: 8px; align-items: center; margin-bottom: -6px; }
+.kick .star { color: var(--accent); font-size: 14px; }
+.team { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.team b { font: 800 26px/1.05 var(--display); text-transform: uppercase; letter-spacing: .01em; }
+.team small { font-size: 13px; color: var(--muted); font-weight: 500; }
+.team .names { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; min-width: 0; }
+.vs { font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: .12em; text-transform: uppercase; margin: 4px 0 4px 44px; }
+.card .verdict { display: grid; justify-items: center; gap: 6px; }
+.card .gauge { width: 96px; height: 96px; --gs: 36px; }
+.pill { font: 800 11px var(--body); letter-spacing: .08em; text-transform: uppercase; padding: 5px 10px; border-radius: 999px; white-space: nowrap;
+  background: color-mix(in srgb, var(--c) 15%, transparent); color: var(--c); }
+.blurb { margin: 0; font-size: 15.5px; color: color-mix(in srgb, var(--ink) 88%, var(--muted)); }
+.tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.tag { font-size: 12px; font-weight: 700; border: 1px solid var(--line); color: var(--muted); padding: 4px 10px; border-radius: 999px; background: var(--surface-2); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; border-top: 1px solid var(--line); padding-top: 12px; }
+.btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface-2); border-radius: 10px; height: 36px; padding: 0 12px;
+  font-size: 13px; font-weight: 700; text-decoration: none; }
+.btn:hover { border-color: var(--muted); }
+.btn svg { width: 15px; height: 15px; }
+.btn.gold { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.dark { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.more { margin-left: auto; font-size: 13px; font-weight: 800; text-decoration: none; display: inline-flex; gap: 4px; align-items: center; }
+.more:hover { color: var(--accent); }
+.final { font: 800 19px var(--display); letter-spacing: .04em; text-transform: uppercase; display: inline-flex; align-items: center; gap: 8px; }
+.final small { font: 700 11px var(--body); color: var(--muted); letter-spacing: .06em; }
+.ad { border: 1px dashed var(--line); border-radius: 18px; display: grid; place-items: center; min-height: 120px; color: var(--muted);
+  font-size: 11px; letter-spacing: .16em; text-transform: uppercase; background: repeating-linear-gradient(135deg, transparent 0 12px, color-mix(in srgb, var(--line) 40%, transparent) 12px 13px); }
+.empty { padding: 36px; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: 18px; }
+
+/* Panels */
+.panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 16px; margin: 44px 0 8px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 22px; display: grid; gap: 12px; align-content: start; box-shadow: var(--shadow); }
+.panel h3 { margin: 0; font: 900 26px/1 var(--display); text-transform: uppercase; letter-spacing: .02em; text-wrap: balance; }
+.panel p { margin: 0; color: var(--muted); font-size: 15px; }
+.panel.support { background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 14%, var(--surface)), var(--surface) 60%); border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
+.goal { display: flex; justify-content: space-between; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.goalbar { height: 12px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); overflow: hidden; }
+.goalbar div { height: 100%; min-width: 6px; background: var(--accent); border-radius: 999px; }
+.soon { justify-self: start; font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent); padding: 3px 9px; border-radius: 999px; }
+.steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; counter-reset: s; }
+.steps li { display: grid; grid-template-columns: 30px 1fr; gap: 10px; color: var(--muted); font-size: 14.5px; counter-increment: s; }
+.steps li::before { content: counter(s); width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2);
+  border: 1px solid var(--line); font: 800 15px var(--display); color: var(--ink); }
+.perks { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; font-size: 14.5px; color: var(--muted); }
+.perks li::before { content: "✓"; color: var(--accent); font-weight: 800; margin-right: 8px; }
+
+/* Footer */
+footer { margin-top: 56px; border-top: 1px solid var(--line); background: var(--surface); }
+footer .wrap { padding-top: 30px; padding-bottom: 40px; display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr)); gap: 24px; }
+footer .wordmark { font-size: 26px; }
+footer p { margin: 8px 0 0; color: var(--muted); font-size: 14px; max-width: 44ch; }
+footer h4 { margin: 0 0 8px; font: 800 13px var(--display); letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+footer ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 14px; }
+footer ul a { text-decoration: none; }
+footer ul a:hover { color: var(--accent); }
+.fine { grid-column: 1 / -1; border-top: 1px solid var(--line); padding-top: 16px; color: var(--muted); font-size: 12.5px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+/* Game page */
+.back { display: inline-flex; gap: 6px; align-items: center; margin: 22px 0 12px; font-weight: 800; text-decoration: none; font-size: 14px; }
+.gamepage .card { padding: 26px; gap: 18px; }
+.gamepage .team b { font-size: clamp(30px, 5vw, 46px); }
+.gamepage .card .gauge { width: 150px; height: 150px; --gs: 54px; }
+.gamepage .blurb { font-size: 19px; }
+.replay { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Dialogs */
+.scrim { position: fixed; inset: 0; background: rgba(4, 8, 16, .58); z-index: 50; display: none; align-items: flex-end; justify-content: center; }
+.scrim.open { display: flex; }
+.sheet { background: var(--surface); color: var(--ink); width: min(700px, 100%); max-height: 86%; overflow: auto; border-radius: 22px 22px 0 0; padding: 24px;
+  border: 1px solid var(--line); display: grid; gap: 14px; box-shadow: var(--shadow-lift); }
+@media (min-width: 700px) { .scrim { align-items: center; } .sheet { border-radius: 22px; } }
+.sheet h3 { margin: 0; font: 900 28px/1 var(--display); text-transform: uppercase; }
+.sheet p { margin: 0; color: var(--muted); }
+.teamgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.teamgrid button { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); background: var(--surface-2); border-radius: 12px; padding: 9px; text-align: left; font-size: 14px; font-weight: 700; }
+.teamgrid button[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--surface)); }
+.sheet .row { display: flex; gap: 8px; justify-content: flex-end; }
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 11px 18px;
+  border-radius: 999px; font-size: 14px; font-weight: 700; z-index: 60; opacity: 0; pointer-events: none; transition: opacity .2s; }
+.toast.show { opacity: 1; }
+
+@media (max-width: 860px) {
+  .intro { grid-template-columns: 1fr; gap: 22px; }
+  .nav { display: none; }
+  footer .wrap { grid-template-columns: 1fr 1fr; }
+  footer .wrap > div:first-child { grid-column: 1 / -1; }
+}
+@media (max-width: 560px) {
+  .wordmark { font-size: 24px; }
+  #teams-btn span { display: none; }
+  .feature-inner { grid-template-columns: 1fr; padding: 24px 20px; }
+  .feature .verdict { justify-items: start; grid-row: 1; display: flex; align-items: center; gap: 14px; }
+  .feature .gauge { width: 120px; height: 120px; --gs: 42px; }
+  .team b { font-size: 22px; }
+  .group-head h3 { font-size: 24px; }
+  .card .gauge { width: 84px; height: 84px; --gs: 30px; }
+  .gamepage .card-main { grid-template-columns: 1fr; }
+  .gamepage .verdict { grid-row: 1; display: flex; align-items: center; gap: 14px; justify-items: start; }
+  .gamepage .card .gauge { width: 120px; height: 120px; --gs: 44px; }
+  .controls .seg { order: 3; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#" id="home-link" aria-label="Thrillcheck home">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="13" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="61.3 81.7" stroke-linecap="round" transform="rotate(135 16 16)" opacity=".25"/><circle cx="16" cy="16" r="13" fill="none" stroke="var(--accent)" stroke-width="3" stroke-dasharray="48 81.7" stroke-linecap="round" transform="rotate(135 16 16)"/><path d="M11 16.5l3.4 3.4L21.5 12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="wordmark">Thrill<span>check</span></span>
+    </a>
+    <nav class="nav" aria-label="Sections"><a href="#" id="nav-week">This week</a><a href="#how">How it works</a><a href="#whats-next">What's next</a><a href="#feedback">Feedback</a></nav>
+    <button class="iconbtn" id="teams-btn" type="button" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>
+      <span>My teams</span>
+    </button>
+    <button class="iconbtn" id="theme-btn" type="button" aria-label="Switch light or dark theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+  </div>
+</header>
+
+<a class="announce" href="#feedback"><span class="soon">Updates coming soon</span><span>Premier League and La Liga are here in beta. College football and alerts for your teams are next. Tell us what you want &rarr;</span></a>
+<main class="wrap" id="app" aria-live="polite"></main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <span class="wordmark">Thrill<span>check</span></span>
+      <p><strong>Thrillcheck the game.</strong> We rate NFL, NBA, Premier League and La Liga games from play-by-play data and match reports. Soccer ratings are in beta. Scores stay hidden unless you ask.</p>
+    </div>
+    <div><h4>Explore</h4><ul><li><a href="#" id="foot-week">This week's games</a></li><li><a href="#how">How we rate games</a></li><li><a href="#support">Support Thrillcheck</a></li><li><a href="#whats-next">What's next</a></li><li><a href="#feedback">Send feedback</a></li></ul></div>
+    <div><h4>Watch replays</h4><ul id="foot-replays"></ul></div>
+    <div><h4>Thrillcheck</h4><ul><li><a href="#about">About</a></li><li><a href="#privacy">Privacy policy</a></li><li><a href="#contact">Contact</a></li><li id="foot-best"></li></ul></div>
+    <div class="fine"><span id="updated"></span><span>Not affiliated with the NFL or any team.</span></div>
+  </div>
+</footer>
+
+<div class="scrim" id="teams-scrim" role="dialog" aria-modal="true" aria-labelledby="teams-title">
+  <div class="sheet">
+    <h3 id="teams-title">My teams</h3>
+    <p>Pick your teams. Their games show first and get a star. Saved on this device only.</p>
+    <div class="teamgrid" id="teamgrid"></div>
+    <div class="row"><button class="btn" id="teams-clear" type="button">Clear all</button><button class="btn dark" id="teams-done" type="button">Done</button></div>
+  </div>
+</div>
+
+<div class="scrim" id="reveal-scrim" role="dialog" aria-modal="true" aria-labelledby="reveal-title">
+  <div class="sheet">
+    <h3 id="reveal-title">Show the final score?</h3>
+    <p>This spoils the game. Only do this if you've watched it or don't plan to.</p>
+    <div class="row"><button class="btn" id="reveal-cancel" type="button">Keep it hidden</button><button class="btn gold" id="reveal-ok" type="button">Show the score</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const RAW = __DATA__;
+const START = "__START__";
+const LABELS = ["Must watch", "Worth watching", "Fans only", "Skip it"];
+const LABEL_CLASS = { "Must watch": "must", "Worth watching": "worth", "Fans only": "fans", "Skip it": "skip" };
+const RANGES = { "Must watch": "80+", "Worth watching": "60-79", "Fans only": "40-59", "Skip it": "0-39" };
+const LEAGUES = {
+  nfl: { name: "NFL", short: "NFL", unit: "week", pick: "Game of the week" },
+  nba: { name: "NBA", short: "NBA", unit: "night", pick: "Game of the night" },
+  epl: { name: "Premier League", short: "EPL", unit: "matchweek", pick: "Match of the week", beta: true, soccer: true },
+  laliga: { name: "La Liga", short: "LALIGA", unit: "matchweek", pick: "Match of the week", beta: true, soccer: true },
+};
+const RATING_NOTE = {
+  early: "Early rating from match reports, read by AI. It's checked against play-by-play data once that arrives.",
+  aiFinal: "Rated from match reports, read by AI. Soccer ratings are in beta.",
+  final: "Rated from play-by-play data.",
+};
+function ratingBadge(g) {
+  if (g.rating === "early") return `<span class="rb early" title="${RATING_NOTE.early}">Early rating</span>`;
+  if (LEAGUES[g.league].soccer) return `<span class="rb beta" title="${RATING_NOTE.aiFinal}">AI-rated &middot; Beta</span>`;
+  return "";
+}
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+const state = { data: null, league: store.get("tc-league", "nfl"), season: null, group: null, sort: store.get("tc-sort", "best"),
+  mine: new Set(store.get("tc-teams2", [])), revealed: new Set(), pending: null,
+  blurbs: store.get("tc-blurbs", false), opened: new Set(),
+  watched: new Set(store.get("tc-watched", [])), votes: store.get("tc-votes", {}), totals: {} };
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+(function theme() {
+  const t = store.get("tc-theme", null);
+  if (t) document.documentElement.setAttribute("data-theme", t);
+  $("#theme-btn").addEventListener("click", () => {
+    const cur = document.documentElement.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    const next = cur === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    store.set("tc-theme", next);
+  });
+})();
+
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove("show"), 1900); }
+const L = () => LEAGUES[state.league];
+const leagueGames = (lg = state.league) => state.data.games.filter((g) => g.league === lg);
+function teamKey(g, code) { return g.league + ":" + code; }
+function isMine(g) { return state.mine.has(teamKey(g, g.away)) || state.mine.has(teamKey(g, g.home)); }
+function cityOf(full, short) { return full.endsWith(short) && full !== short ? full.slice(0, full.length - short.length).trim() : ""; }
+function link(g) { return "#game-" + g.id; }
+function groupHash(lg, season, group) { return `${lg}-${season}-${group}`; }
+
+function seasons(lg = state.league) {
+  const m = new Map(); leagueGames(lg).forEach((g) => m.set(g.season, g.seasonLabel));
+  return [...m.entries()].sort((a, b) => b[0] - a[0]);
+}
+function groupsOf(season, lg = state.league) {
+  const m = new Map(); leagueGames(lg).filter((g) => g.season === season).forEach((g) => m.set(g.group, g));
+  return [...m.values()].sort((a, b) => a.groupOrder - b.groupOrder).map((g) => ({ key: g.group, label: g.groupLabel, short: g.groupShort }));
+}
+function latest(lg = state.league) { const ss = seasons(lg); if (!ss.length) return { season: null, group: null }; const s = ss[0][0], gs = groupsOf(s, lg); return { season: s, group: gs[gs.length - 1].key }; }
+
+/* 270-degree gauge. Circle r=40 has circumference 251.33; the arc uses 75% of it. */
+function gauge(g) {
+  const arc = 188.5, len = (arc * g.score) / 100;
+  return `<div class="gauge ${LABEL_CLASS[g.label]}" role="img" aria-label="Thrill Score ${g.score} out of 100">
+    <svg viewBox="0 0 100 100"><circle class="trk" cx="50" cy="50" r="40" fill="none" stroke-width="9" stroke-linecap="round" stroke-dasharray="${arc} 251.33" transform="rotate(135 50 50)"/>
+    <circle class="val" cx="50" cy="50" r="40" fill="none" stroke-width="9" stroke-linecap="round" stroke-dasharray="${len.toFixed(1)} 251.33" transform="rotate(135 50 50)"/></svg>
+    <span class="n">${g.score}</span></div>`;
+}
+function team(code, short, full, color, lg) {
+  return `<a class="team" href="#team-${lg}-${code.toLowerCase()}" title="All ${esc(full)} games"><span class="chip" style="background:${color}">${esc(code)}</span><span class="names"><b>${esc(short)}</b><small>${esc(cityOf(full, short))}</small></span></a>`;
+}
+function finalLine(g) {
+  const f = g.final;
+  return `<span class="final">${esc(g.away)} ${f.away} <small>&middot;</small> ${esc(g.home)} ${f.home}${f.ot ? "<small>OT</small>" : ""}</span>`;
+}
+const ICON_EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12.5l4.2 4.2L19 7"/></svg>';
+const ICON_UP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 11v9H4v-9zM7 11l4-8a2 2 0 0 1 3 2l-1 5h6a2 2 0 0 1 2 2.3l-1.4 7A2 2 0 0 1 17.6 21H7"/></svg>';
+const ICON_DOWN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 13V4h3v9zM17 13l-4 8a2 2 0 0 1-3-2l1-5H5a2 2 0 0 1-2-2.3l1.4-7A2 2 0 0 1 6.4 3H17"/></svg>';
+
+/* Was it worth it? Votes go to a free Supabase table when configured; otherwise they stay on this device. */
+function voteRow(g) {
+  const mine = state.votes[g.id], t = state.totals[g.id];
+  const tally = t && t.yes + t.no >= 5 ? `<span class="tally"><b>${Math.round((100 * t.yes) / (t.yes + t.no))}%</b> of ${t.yes + t.no} fans said it was worth it</span>` : "";
+  if (mine === undefined) {
+    return `<div class="vote"><span>Was it worth watching?</span>
+      <button class="btn" type="button" data-vote="${g.id}:1">${ICON_UP}Yes</button>
+      <button class="btn" type="button" data-vote="${g.id}:0">${ICON_DOWN}No</button>${tally}</div>`;
+  }
+  return `<div class="vote done"><span>Thanks. You said ${mine ? "it was" : "it wasn't"} worth it.</span><button class="linkish" type="button" data-unvote="${g.id}">Change</button>${tally}</div>`;
+}
+async function sendVote(id, worth) {
+  const c = state.data.config.votes || {};
+  if (!c.supabaseUrl || !c.supabaseAnonKey) return;
+  try {
+    await fetch(`${c.supabaseUrl}/rest/v1/votes`, { method: "POST", headers: { apikey: c.supabaseAnonKey, Authorization: `Bearer ${c.supabaseAnonKey}`,
+      "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify({ game_id: id, worth }) });
+  } catch (e) {}
+}
+async function loadTotals(ids) {
+  const c = state.data.config.votes || {};
+  if (!c.supabaseUrl || !c.supabaseAnonKey || !ids.length) return;
+  try {
+    const r = await fetch(`${c.supabaseUrl}/rest/v1/vote_totals?game_id=in.(${ids.map(encodeURIComponent).join(",")})`, { headers: { apikey: c.supabaseAnonKey, Authorization: `Bearer ${c.supabaseAnonKey}` } });
+    if (!r.ok) return;
+    (await r.json()).forEach((x) => { state.totals[x.game_id] = { yes: x.yes, no: x.no }; });
+    keepScroll(route);
+  } catch (e) {}
+}
+
+const ICON_TEXT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>';
+function showBlurb(g) { return state.blurbs || state.opened.has(g.id); }
+const ICON_LINK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>';
+
+function card(g) {
+  const cls = LABEL_CLASS[g.label];
+  return `<article class="card ${isMine(g) ? "mine" : ""}" style="--ac:${g.awayColor};--hc:${g.homeColor}">
+    <div class="kick">${isMine(g) ? '<span class="star" aria-label="My team">&#9733;</span>' : ""}<span class="lg">${LEAGUES[g.league].short}</span><span>${esc(g.kickoff)}</span>${ratingBadge(g)}</div>
+    <div class="card-main">
+      <div>
+        ${team(g.away, g.awayShort, g.awayName, g.awayColor, g.league)}
+        <div class="vs">at</div>
+        ${team(g.home, g.homeShort, g.homeName, g.homeColor, g.league)}
+      </div>
+      <div class="verdict">${gauge(g)}<span class="pill ${cls}">${esc(g.label)}</span></div>
+    </div>
+    ${showBlurb(g) ? `<p class="blurb">${esc(g.blurb)}</p>` : ""}
+    ${g.vibes.length ? `<div class="tags">${g.vibes.map((v) => `<span class="tag">${esc(v)}</span>`).join("")}</div>` : ""}
+    <div class="actions">
+      ${state.revealed.has(g.id) || state.watched.has(g.id) ? finalLine(g) : `<button class="btn" data-reveal="${g.id}" type="button">${ICON_EYE}Reveal score</button>`}
+      <button class="btn ${state.watched.has(g.id) ? "on" : ""}" data-watched="${g.id}" type="button" aria-pressed="${state.watched.has(g.id)}">${ICON_CHECK}${state.watched.has(g.id) ? "Watched" : "I watched it"}</button>
+      <button class="btn" data-share="${g.id}" type="button">${ICON_LINK}Copy link</button>
+      ${state.blurbs ? "" : `<button class="btn" data-blurb="${g.id}" type="button" aria-pressed="${state.opened.has(g.id)}">${ICON_TEXT}${state.opened.has(g.id) ? "Hide description" : "Description"}</button>`}
+      <a class="more" href="${link(g)}">Game page &rarr;</a>
+    </div>
+    ${state.watched.has(g.id) || state.revealed.has(g.id) ? voteRow(g) : ""}
+  </article>`;
+}
+
+function feature(g) {
+  return `<section class="feature ${g.league}${LEAGUES[g.league].soccer ? " soccer" : ""}" aria-label="${LEAGUES[g.league].pick}">
+    <div class="feature-inner">
+      <div>
+        <div class="kicker">${esc(g.groupLabel)} &middot; ${LEAGUES[g.league].pick}${g.rating === "early" ? " &middot; Early rating" : ""}</div>
+        <h2>${esc(g.awayShort)} <span class="at">at</span> ${esc(g.homeShort)}</h2>
+        ${showBlurb(g) ? `<p>${esc(g.blurb)}</p>` : ""}
+        <div class="row">
+          <a class="cta" href="${link(g)}">Open game page &rarr;</a>
+          ${g.vibes.map((v) => `<span class="tag">${esc(v)}</span>`).join("")}
+        </div>
+      </div>
+      <div class="verdict">${gauge(g)}<span class="pill">${esc(g.label)}</span></div>
+    </div>
+  </section>`;
+}
+
+function intro() {
+  const all = leagueGames();
+  const counts = LABELS.map((l) => all.filter((g) => g.label === l).length);
+  const max = Math.max(...counts, 1);
+  return `<section class="intro">
+    <div>
+      <div class="kicker">Missed the game?</div>
+      <h1 class="punch-line">Thrillcheck <em>the game</em></h1>
+      <p class="punch-sub">See if the replay is worth your time. We rate NFL, NBA and soccer games from 0 to 100 and never show the score.</p>
+      <div class="stats">
+        <div class="stat"><b>${state.data.games.length.toLocaleString()}</b><span>Games rated</span></div>
+        <div class="stat"><b>0</b><span>Scores shown</span></div>
+        <div class="stat"><b>${counts[0]}</b><span>${L().short} must watches</span></div>
+      </div>
+    </div>
+    <div class="key" aria-label="How to read the Thrill Score">
+      <h2>The Thrill Score &middot; ${L().name}</h2>
+      ${LABELS.map((l, i) => `<div class="key-row ${LABEL_CLASS[l]}"><strong>${l}</strong><div class="key-bar"><i style="width:${Math.round((counts[i] / max) * 100)}%"></i></div><em>${RANGES[l]}</em></div>`).join("")}
+    </div>
+  </section>`;
+}
+
+function panels() {
+  return `<div class="panels">
+    ${supportPanel()}
+    <section class="panel" id="how">
+      <h3>How we rate games</h3>
+      <ol class="steps">
+        <li>Within about an hour of the final whistle, AI reads match reports and checks the facts across at least two sources. That's the Early rating.</li>
+        <li>When full play-by-play data arrives, we re-score the game from every play and confirm the rating.</li>
+        <li>It all becomes one Thrill Score from 0 to 100. The result stays hidden unless you tap Reveal.</li>
+      </ol>
+    </section>
+    <section class="panel" id="whats-next">
+      <span class="soon">Updates coming soon</span>
+      <h3>What's next</h3>
+      <ul class="road">
+        <li><b>Premier League and La Liga</b><span>In beta now, rated from match reports</span></li>
+        <li><b>College football</b><span>Saturdays get the Thrillcheck treatment</span></li>
+        <li><b>NHL and MLB</b><span>More leagues, same no-spoiler rules</span></li>
+        <li><b>Alerts for your teams</b><span>A ping when your game is a Must watch</span></li>
+        <li><b>Ratings in minutes</b><span>Live data, funded by supporters</span></li>
+        <li><b>Thrillcheck Plus</b><span>No ads, early ratings, and more</span></li>
+      </ul>
+    </section>
+  </div>
+  ${feedbackSection()}`;
+}
+
+const IDEAS = ["College football", "NHL", "MLB", "Soccer", "Alerts for my team", "A phone app", "Ratings faster", "Highlights links"];
+function supportPanel() {
+  const c = state.data.config, d = c.donate || {};
+  const btn = `<div><a class="btn gold" href="${esc(c.donateUrl)}" target="_blank" rel="noopener">Support Thrillcheck</a></div>`;
+  const fans = d.supporters >= (d.showSupportersFrom || 10) ? `<p class="fans-count"><b>Backed by ${d.supporters} fans</b> and counting.</p>` : "";
+  if (d.mode !== "stretch") {
+    return `<section class="panel support" id="support">
+      <h3>Keep Thrillcheck fast and free</h3>
+      <p>Thrillcheck is fan-supported. Tips go straight into making the site better.</p>
+      <ul class="pays">${(d.paysFor || []).map((x) => `<li>${esc(x)}</li>`).join("")}</ul>
+      ${fans}${btn}
+    </section>`;
+  }
+  const goals = d.stretchGoals || [], raised = d.raised || 0;
+  const next = goals.find((g) => raised < g.amount);
+  const prev = [...goals].reverse().find((g) => raised >= g.amount);
+  const base = prev ? prev.amount : 0;
+  const pct = next ? Math.max(4, Math.round(((raised - base) / (next.amount - base)) * 100)) : 100;
+  return `<section class="panel support" id="support">
+    <h3>Unlock what's next</h3>
+    <p>${next ? `Next unlock: <b>${esc(next.unlock)}</b> at $${next.amount} a month.` : "Every goal is unlocked, thanks to you. Your support keeps it all running."}</p>
+    ${next ? `<div class="goalbar" role="progressbar" aria-label="Progress to next unlock" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><div style="width:${pct}%"></div></div>` : ""}
+    <ul class="ladder">${goals.map((g) => `<li class="${raised >= g.amount ? "done" : g === next ? "next" : ""}"><span>$${g.amount}/mo</span>${esc(g.unlock)}</li>`).join("")}</ul>
+    ${fans}${btn}
+  </section>`;
+}
+
+function feedbackSection() {
+  return `<section class="feedback" id="feedback">
+    <div class="fb-intro">
+      <span class="kicker">Feedback</span>
+      <h3>Help shape Thrillcheck</h3>
+      <p>Tell us what's working, what's broken, or what you'd like to see next. We read every message.</p>
+      <div class="ideas" role="group" aria-label="Quick feature ideas">${IDEAS.map((i) => `<button type="button" class="idea" data-idea="${esc(i)}">+ ${esc(i)}</button>`).join("")}</div>
+    </div>
+    <form class="fb-form" id="fb-form" novalidate>
+      <label for="fb-type">What is this about?</label>
+      <select id="fb-type"><option>Feature idea</option><option>General feedback</option><option>Something's broken</option><option>A rating felt wrong</option></select>
+      <label for="fb-msg">Your message</label>
+      <textarea id="fb-msg" rows="5" placeholder="I'd love to see ratings for college football on Saturdays."></textarea>
+      <label for="fb-email">Email <span class="opt">(optional, if you'd like a reply)</span></label>
+      <input id="fb-email" type="email" placeholder="you@example.com" autocomplete="email">
+      <p class="fb-err" id="fb-err" role="alert"></p>
+      <div class="fb-row"><button class="btn gold" type="submit" id="fb-send">Send feedback</button><span class="fb-note" id="fb-note"></span></div>
+    </form>
+  </section>`;
+}
+
+function controls() {
+  const gs = state.season ? groupsOf(state.season) : [];
+  return `<div class="leagues" role="tablist" aria-label="League">
+      ${Object.entries(LEAGUES).map(([k, v]) => `<button type="button" role="tab" data-league="${k}" aria-selected="${k === state.league}">${v.short}${v.beta ? "<sup>Beta</sup>" : ""}</button>`).join("")}
+    </div>
+    ${state.season ? `<div class="controls">
+    <label for="season" style="position:absolute;left:-9999px">Season</label>
+    <select id="season">${seasons().map(([s, lab]) => `<option value="${s}" ${s === state.season ? "selected" : ""}>${lab} season</option>`).join("")}</select>
+    <div class="weeks ${state.league}" role="group" aria-label="${L().unit}">${gs.map((w) => `<button class="wk" type="button" data-group="${w.key}" aria-pressed="${w.key === state.group}" title="${esc(w.label)}">${esc(w.short)}</button>`).join("")}</div>
+    <a class="btn best-link" href="#best-${state.league}-${state.season}">Season's best</a>
+    <button class="toggle" type="button" data-blurbs="1" role="switch" aria-checked="${state.blurbs}"><span class="sw" aria-hidden="true"></span>Descriptions</button>
+    <div class="seg" role="group" aria-label="Sort games">
+      <button type="button" data-sort="best" aria-pressed="${state.sort === "best"}">By verdict</button>
+      <button type="button" data-sort="time" aria-pressed="${state.sort === "time"}">By start time</button>
+    </div>
+  </div>` : ""}`;
+}
+
+function emptyLeague() {
+  const lg = L();
+  return `<section class="soon-league"><span class="soon">Beta &middot; Coming online</span><h3>${lg.name} ratings are almost here</h3>
+    <p>${lg.name} matches will be rated within about an hour of the final whistle, from match reports read by AI and double-checked across sources. Ratings start as soon as the site goes live.</p>
+    <a class="btn gold" href="#feedback">Tell us which leagues you want</a></section>`;
+}
+
+function renderGroup() {
+  if (!state.season) { $("#app").innerHTML = intro() + controls() + emptyLeague() + panels(); return; }
+  const games = leagueGames().filter((g) => g.season === state.season && g.group === state.group);
+  const top = [...games].sort((a, b) => b.score - a.score)[0];
+  const watchedHere = games.filter((g) => g !== top && state.watched.has(g.id));
+  const rest = games.filter((g) => g !== top && !state.watched.has(g.id));
+  const mineFirst = (a, b) => isMine(b) - isMine(a);
+  let body = "", adShown = false;
+  const ad = () => (state.data.config.showAdPlaceholders && !adShown ? ((adShown = true), '<div class="ad" aria-hidden="true">Ad space</div>') : "");
+  if (state.sort === "best") {
+    LABELS.forEach((l) => {
+      const list = rest.filter((g) => g.label === l).sort((a, b) => mineFirst(a, b) || b.score - a.score);
+      if (!list.length) return;
+      body += `<section class="group ${LABEL_CLASS[l]}"><div class="group-head"><h3>${l}</h3><span>${list.length} ${list.length === 1 ? "game" : "games"}</span></div>
+        <div class="grid">${list.map(card).join("")}${list.length % 2 === 1 ? ad() : ""}</div></section>`;
+    });
+  } else {
+    const list = [...rest].sort((a, b) => mineFirst(a, b) || a.kickoff.localeCompare(b.kickoff));
+    body = `<section class="group"><div class="grid">${list.map((g, i) => card(g) + (i === 2 ? ad() : "")).join("")}</div></section>`;
+  }
+  if (watchedHere.length) body += `<section class="group watched"><div class="group-head"><h3>Watched</h3><span>${watchedHere.length} ${watchedHere.length === 1 ? "game" : "games"}</span></div><div class="grid">${watchedHere.map(card).join("")}</div></section>`;
+  $("#app").innerHTML = intro() + controls() + (top ? feature(top) : '<div class="empty">No rated games here yet.</div>') + body + panels();
+  if (!loadTotals.done) { loadTotals.done = true; loadTotals(games.filter((g) => state.watched.has(g.id)).map((g) => g.id)); }
+  const cur = document.querySelector('.wk[aria-pressed="true"]'), bar = document.querySelector(".weeks");
+  if (cur && bar) bar.scrollLeft = cur.offsetLeft - bar.clientWidth / 2 + cur.offsetWidth / 2;
+}
+
+function renderGame(id) {
+  const g = state.data.games.find((x) => x.id === id);
+  if (!g) { location.hash = ""; return; }
+  state.league = g.league; state.season = g.season; state.group = g.group;
+  const more = leagueGames().filter((x) => x.season === g.season && x.group === g.group && x.id !== g.id).sort((a, b) => b.score - a.score).slice(0, 4);
+  document.title = `${g.awayShort} at ${g.homeShort} (${g.groupLabel}): Worth watching? | Thrillcheck`;
+  const links = (state.data.config.replayLinks[g.league] || []).map((l) => `<a class="btn" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.name)}</a>`).join("");
+  $("#app").innerHTML = `
+    <a class="back" href="#${groupHash(g.league, g.season, g.group)}">&larr; All ${esc(g.groupLabel)} games</a>
+    <div class="gamepage">${card(g)}</div>
+    <div class="panels">
+      <section class="panel"><h3>Watch the replay</h3><p>Full replays and condensed games are on the official services.</p><div class="replay">${links}</div></section>
+      <section class="panel"><h3>About this rating</h3><p>${g.rating === "early" ? RATING_NOTE.early : LEAGUES[g.league].soccer ? RATING_NOTE.aiFinal : RATING_NOTE.final} Last updated ${esc(state.data.generated)}.</p></section>
+    </div>
+    ${more.length ? `<section class="group"><div class="group-head"><h3>More from ${esc(g.groupLabel)}</h3></div><div class="grid">${more.map(card).join("")}</div></section>` : ""}`;
+  scrollTo({ top: 0 });
+}
+
+function miniRow(g, rank) {
+  return `<a class="mrow ${rank ? "" : "norank"}" href="${link(g)}" style="--ac:${g.awayColor};--hc:${g.homeColor}">
+    ${rank ? `<span class="rank">${rank}</span>` : ""}
+    <span class="mwhen">${esc(g.groupLabel)}<small>${esc(g.kickoff.split(" · ")[g.league === "nba" ? 1 : 0] || "")}</small></span>
+    <span class="mteams"><span class="chip" style="background:${g.awayColor}">${esc(g.away)}</span>${esc(g.awayShort)} <i>at</i> <span class="chip" style="background:${g.homeColor}">${esc(g.home)}</span>${esc(g.homeShort)}${state.watched.has(g.id) ? ' <em class="seen">Watched</em>' : ""}</span>
+    <span class="mscore ${LABEL_CLASS[g.label]}"><b>${g.score}</b><span class="pill ${LABEL_CLASS[g.label]}">${esc(g.label)}</span></span>
+  </a>`;
+}
+
+function renderTeam(key) {
+  const i = key.indexOf("-"), lg = key.slice(0, i), code = key.slice(i + 1).toUpperCase();
+  if (!LEAGUES[lg]) { location.hash = ""; return; }
+  const all = state.data.games.filter((g) => g.league === lg && (g.away === code || g.home === code));
+  if (!all.length) { location.hash = ""; return; }
+  const one = all[0], name = one.away === code ? one.awayName : one.homeName, color = one.away === code ? one.awayColor : one.homeColor;
+  const ss = [...new Map(all.map((g) => [g.season, g.seasonLabel])).entries()].sort((a, b) => b[0] - a[0]);
+  const season = state.teamSeason && ss.some(([s]) => s === state.teamSeason) ? state.teamSeason : ss[0][0];
+  const list = all.filter((g) => g.season === season).sort((a, b) => a.groupOrder - b.groupOrder || a.kickoff.localeCompare(b.kickoff));
+  const must = list.filter((g) => g.label === "Must watch").length;
+  const unseen = list.filter((g) => !state.watched.has(g.id)).sort((a, b) => b.score - a.score).slice(0, 3);
+  const key2 = `${lg}:${code}`, starred = state.mine.has(key2);
+  document.title = `${name}: every game rated, no spoilers | Thrillcheck`;
+  $("#app").innerHTML = `
+    <a class="back" href="#">&larr; All games</a>
+    <section class="teamhead" style="--tc:${color}">
+      <span class="chip big" style="background:${color}">${esc(code)}</span>
+      <div><div class="kicker">${LEAGUES[lg].name} &middot; Every game rated</div><h1>${esc(name)}</h1>
+      <p>${list.length} games this season, ${must} rated Must watch. No scores anywhere.</p></div>
+      <div class="teamtools">
+        ${ss.length > 1 ? `<select id="team-season">${ss.map(([s, lab]) => `<option value="${s}" ${s === season ? "selected" : ""}>${lab} season</option>`).join("")}</select>` : ""}
+        <button class="btn ${starred ? "on" : ""}" type="button" data-star="${key2}">${starred ? "&#9733; In my teams" : "&#9734; Add to my teams"}</button>
+      </div>
+    </section>
+    ${unseen.length ? `<section class="group"><div class="group-head"><h3>Best ones you haven't watched</h3></div><div class="grid">${unseen.map(card).join("")}</div></section>` : ""}
+    <section class="group"><div class="group-head"><h3>Full season</h3><span>${list.length} games</span></div><div class="mlist">${list.map((g) => miniRow(g)).join("")}</div></section>`;
+  scrollTo({ top: 0 });
+}
+
+function renderBest(key) {
+  const [lg, s] = [key.split("-")[0], +key.split("-")[1]];
+  if (!LEAGUES[lg]) { location.hash = ""; return; }
+  const ss = seasons(lg);
+  const season = ss.some(([x]) => x === s) ? s : ss.length ? ss[0][0] : null;
+  if (!season) { location.hash = lg; return; }
+  const label = ss.find(([x]) => x === season)[1];
+  const list = leagueGames(lg).filter((g) => g.season === season).sort((a, b) => b.score - a.score).slice(0, 25);
+  document.title = `Best ${LEAGUES[lg].name} games of ${label}, ranked without spoilers | Thrillcheck`;
+  $("#app").innerHTML = `
+    <a class="back" href="#">&larr; All games</a>
+    <section class="teamhead"><div><div class="kicker">${LEAGUES[lg].name} &middot; ${label} season</div><h1>The ${list.length} best games of the season</h1>
+      <p>Ranked by Thrill Score. Catching up? Start at the top.</p></div>
+      <div class="teamtools">${ss.length > 1 ? `<select id="best-season">${ss.map(([x, lab]) => `<option value="${x}" ${x === season ? "selected" : ""}>${lab} season</option>`).join("")}</select>` : ""}</div>
+    </section>
+    <div class="mlist ranked">${list.map((g, i) => miniRow(g, i + 1)).join("")}</div>`;
+  scrollTo({ top: 0 });
+}
+
+const PAGES = {
+  about: () => `<h1>About Thrillcheck</h1>
+    <p>Thrillcheck answers one question: is this game worth watching? Missed a game and want to catch the replay without knowing how it ended? We rate every NFL and NBA game, and Premier League and La Liga matches in beta, from 0 to 100, and we never show the score unless you ask.</p>
+    <h2>How ratings work</h2>
+    <p>About an hour after the final whistle, AI reads match reports and checks the key facts across at least two sources to give an early rating. When full play-by-play data arrives, we re-score the game from every play: how much it swung back and forth, how tense the finish was, and how close the winner came to losing. Every game is scored with the same formula.</p>
+    <h2>Spoiler promise</h2>
+    <p>No scores, winners or hints in our titles, descriptions, share images or link previews. Final scores only appear when you tap Reveal or mark a game as watched.</p>
+    <h2>Independent</h2>
+    <p>Thrillcheck is an independent fan project. It is not affiliated with, endorsed by or connected to the NFL, NBA, Premier League, La Liga or any team. Team names are used only to identify games.</p>`,
+  privacy: () => `<h1>Privacy policy</h1><p class="note">Last updated ${esc(state.data.config.policyDate || "")}</p>
+    <p>Thrillcheck is built to collect as little as possible. We don't have user accounts.</p>
+    <h2>What stays on your device</h2>
+    <p>Your favorite teams, the games you mark as watched, your light or dark theme and your display settings are saved in your browser's local storage. They never leave your device, and clearing your browser data removes them.</p>
+    <h2>What we receive</h2>
+    <p><b>Votes:</b> when you answer "Was it worth watching?", we store the game and your yes or no answer, with no name, email or account attached.<br>
+    <b>Feedback:</b> if you send feedback, we receive your message and, only if you choose to give it, your email address, so we can reply. Feedback is delivered to us by Formspree, which processes it under its own privacy policy.<br>
+    <b>Server logs:</b> our host may keep standard technical logs, such as IP addresses and browser type, for security and reliability.</p>
+    <h2>Advertising and cookies</h2>
+    <p>We may show ads through Google AdSense. Google and its partners use cookies to serve ads based on your visits to this and other websites. You can turn off personalized ads at <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener">Google Ads Settings</a> and learn more at <a href="https://policies.google.com/technologies/ads" target="_blank" rel="noopener">How Google uses information from sites that use its services</a>. Where required by law, we'll ask for your consent before ad cookies are used.</p>
+    <h2>Donations</h2>
+    <p>Tips are handled by our donation provider. We don't see or store your payment details.</p>
+    <h2>Children</h2>
+    <p>Thrillcheck isn't directed at children under 13, and we don't knowingly collect their personal information.</p>
+    <h2>Your choices and contact</h2>
+    <p>To ask about or delete feedback you've sent, contact us${state.data.config.contactEmail ? ` at <b>${esc(state.data.config.contactEmail)}</b>` : " through the feedback form"}. We'll update this page if anything changes.</p>`,
+  contact: () => `<h1>Contact</h1>
+    <p>Questions, ideas, a rating you think is off, or a business inquiry? We'd love to hear from you.</p>
+    ${state.data.config.contactEmail ? `<p>Email: <b>${esc(state.data.config.contactEmail)}</b> <a class="btn" href="mailto:${esc(state.data.config.contactEmail)}">Write an email</a></p>` : ""}
+    <p>The fastest way to reach us is the feedback form below.</p>
+    ${feedbackSection()}`,
+};
+function renderPage(name) {
+  document.title = { about: "About", privacy: "Privacy policy", contact: "Contact" }[name] + " | Thrillcheck";
+  $("#app").innerHTML = `<a class="back" href="#">&larr; All games</a><article class="doc">${PAGES[name]()}</article>`;
+  scrollTo({ top: 0 });
+}
+
+function setLeague(lg) { state.league = lg; store.set("tc-league", lg); const l = latest(lg); state.season = l.season; state.group = l.group; }
+function leagueHash() { return state.season ? groupHash(state.league, state.season, state.group) : state.league; }
+
+function route() {
+  const h = location.hash.slice(1) || START;
+  if (h.startsWith("game-")) return renderGame(h.slice(5));
+  if (h.startsWith("team-")) return renderTeam(h.slice(5));
+  if (h.startsWith("best-")) return renderBest(h.slice(5));
+  if (PAGES[h]) return renderPage(h);
+  if (LEAGUES[h]) { setLeague(h); }
+  const m = h.match(/^(nfl|nba|epl|laliga)-(\d{4})-(.+)$/);
+  if (m) {
+    const [, lg, s, grp] = m;
+    if (lg !== state.league) { state.league = lg; store.set("tc-league", lg); }
+    if (groupsOf(+s, lg).some((x) => x.key === grp)) { state.season = +s; state.group = grp; }
+  }
+  if (!state.season || !groupsOf(state.season).some((x) => x.key === state.group)) { const l = latest(); state.season = l.season; state.group = l.group; }
+  if (m && !state.season) { /* league with no games yet */ }
+  document.title = "Thrillcheck the game";
+  renderGroup();
+  if (["support", "how", "whats-next", "feedback"].includes(h)) { const el = document.getElementById(h); if (el) el.scrollIntoView({ block: "center" }); }
+}
+
+function keepScroll(fn) { const y = scrollY; fn(); scrollTo({ top: y }); }
+function goLatest(e) { if (e) e.preventDefault(); setLeague(state.league); location.hash = ""; route(); scrollTo({ top: 0 }); }
+
+document.addEventListener("click", async (e) => {
+  const t = e.target.closest("button, a");
+  if (!t) return;
+  if (t.dataset.group) location.hash = groupHash(state.league, state.season, t.dataset.group);
+  else if (t.dataset.league) { setLeague(t.dataset.league); const h = leagueHash(); if (location.hash.slice(1) === h) route(); else location.hash = h; }
+  else if (t.dataset.watched) {
+    const id = t.dataset.watched;
+    if (state.watched.has(id)) state.watched.delete(id); else { state.watched.add(id); toast("Marked as watched. Score revealed for you."); }
+    store.set("tc-watched", [...state.watched]); keepScroll(route);
+  }
+  else if (t.dataset.vote) {
+    const [id, v] = t.dataset.vote.split(":"); const worth = v === "1";
+    const first = state.votes[id] === undefined;
+    state.votes[id] = worth; store.set("tc-votes", state.votes);
+    if (first) sendVote(id, worth);
+    keepScroll(route);
+  }
+  else if (t.dataset.unvote) { delete state.votes[t.dataset.unvote]; store.set("tc-votes", state.votes); keepScroll(route); }
+  else if (t.dataset.blurbs) { state.blurbs = !state.blurbs; store.set("tc-blurbs", state.blurbs); state.opened.clear(); route(); }
+  else if (t.dataset.blurb) { const id = t.dataset.blurb; state.opened.has(id) ? state.opened.delete(id) : state.opened.add(id); keepScroll(route); }
+  else if (t.dataset.idea) {
+    const box = $("#fb-msg"); const idea = t.dataset.idea;
+    $("#fb-type").value = "Feature idea"; t.setAttribute("aria-pressed", "true");
+    box.value = box.value.trim() ? box.value.trim() + "\n" + idea : "I'd like to see: " + idea;
+    $("#fb-err").textContent = ""; box.focus();
+  }
+  else if (t.dataset.sort) { state.sort = t.dataset.sort; store.set("tc-sort", state.sort); route(); }
+  else if (t.dataset.reveal) { state.pending = t.dataset.reveal; $("#reveal-scrim").classList.add("open"); $("#reveal-cancel").focus(); }
+  else if (t.dataset.share) {
+    const url = location.href.split("#")[0] + "#game-" + t.dataset.share;
+    try { await navigator.clipboard.writeText(url); toast("Link copied. Thrillcheck it, spoiler-free."); } catch (err) { toast("Couldn't copy. Open the game page and share that."); }
+  } else if (t.dataset.team) {
+    const c = t.dataset.team;
+    state.mine.has(c) ? state.mine.delete(c) : state.mine.add(c);
+    t.setAttribute("aria-pressed", state.mine.has(c));
+    store.set("tc-teams2", [...state.mine]);
+  } else if (["home-link", "nav-week", "foot-week"].includes(t.id)) goLatest(e);
+});
+document.addEventListener("click", (e) => {
+  const s = e.target.closest("[data-star]");
+  if (!s) return;
+  const k = s.dataset.star; state.mine.has(k) ? state.mine.delete(k) : state.mine.add(k);
+  store.set("tc-teams2", [...state.mine]); keepScroll(route);
+});
+document.addEventListener("change", (e) => {
+  if (e.target.id === "team-season") { state.teamSeason = +e.target.value; route(); return; }
+  if (e.target.id === "best-season") { const lg = location.hash.slice(1).split("-")[1]; location.hash = `best-${lg}-${e.target.value}`; return; }
+  if (e.target.id === "season") { const s = +e.target.value; const gs = groupsOf(s); location.hash = groupHash(state.league, s, gs[gs.length - 1].key); }
+});
+$("#reveal-cancel").addEventListener("click", () => $("#reveal-scrim").classList.remove("open"));
+$("#reveal-ok").addEventListener("click", () => { state.revealed.add(state.pending); $("#reveal-scrim").classList.remove("open"); route(); });
+$("#teams-btn").addEventListener("click", () => {
+  const lg = state.league;
+  const teams = [...new Map(leagueGames(lg).flatMap((g) => [[g.away, [g.awayName, g.awayColor]], [g.home, [g.homeName, g.homeColor]]])).entries()].sort((a, b) => a[1][0].localeCompare(b[1][0]));
+  $("#teams-title").textContent = `My ${LEAGUES[lg].name} teams`;
+  if (!teams.length) { $("#teamgrid").innerHTML = `<p>${LEAGUES[lg].name} teams appear here once ratings start.</p>`; $("#teams-scrim").classList.add("open"); return; }
+  $("#teamgrid").innerHTML = teams.map(([c, [n, col]]) => `<button type="button" data-team="${lg}:${c}" aria-pressed="${state.mine.has(lg + ":" + c)}"><span class="chip" style="background:${col}">${c}</span>${esc(n)}</button>`).join("");
+  $("#teams-scrim").classList.add("open");
+});
+$("#teams-done").addEventListener("click", () => { $("#teams-scrim").classList.remove("open"); route(); });
+$("#teams-clear").addEventListener("click", () => {
+  [...state.mine].filter((k) => k.startsWith(state.league + ":")).forEach((k) => state.mine.delete(k));
+  store.set("tc-teams2", [...state.mine]); document.querySelectorAll("[data-team]").forEach((b) => b.setAttribute("aria-pressed", "false"));
+});
+document.querySelectorAll(".scrim").forEach((s) => s.addEventListener("click", (e) => { if (e.target === s) { s.classList.remove("open"); if (s.id === "teams-scrim") route(); } }));
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") document.querySelectorAll(".scrim.open").forEach((s) => s.classList.remove("open")); });
+addEventListener("hashchange", route);
+document.addEventListener("input", (e) => { if (["fb-msg", "fb-email"].includes(e.target.id)) $("#fb-err").textContent = ""; });
+document.addEventListener("submit", async (e) => {
+  if (e.target.id !== "fb-form") return;
+  e.preventDefault();
+  const msg = $("#fb-msg").value.trim(), email = $("#fb-email").value.trim(), note = $("#fb-note"), err = $("#fb-err");
+  note.className = "fb-note"; note.textContent = "";
+  if (msg.length < 5) { err.textContent = "Write a message first, even a short one."; $("#fb-msg").focus(); return; }
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.textContent = "That email doesn't look right. Fix it or leave it blank."; $("#fb-email").focus(); return; }
+  const endpoint = state.data.config.feedbackEndpoint;
+  if (!endpoint) { note.textContent = "Feedback isn't connected yet. Once the site is live, messages go straight to our inbox."; return; }
+  const btn = $("#fb-send"); btn.disabled = true; btn.textContent = "Sending…";
+  try {
+    const r = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ type: $("#fb-type").value, message: msg, email, league: state.league, page: location.href }) });
+    if (!r.ok) throw new Error(r.status);
+    e.target.reset(); document.querySelectorAll(".idea").forEach((b) => b.removeAttribute("aria-pressed"));
+    note.className = "fb-note ok"; note.textContent = "Thanks. We got it.";
+  } catch (x) {
+    err.textContent = "Couldn't send right now. Check your connection and try again.";
+  } finally { btn.disabled = false; btn.textContent = "Send feedback"; }
+});
+
+async function boot() {
+  state.data = RAW || await (await fetch("__DATAPATH__")).json();
+  if (!LEAGUES[state.league]) state.league = "nfl";
+  if (!leagueGames().length && !LEAGUES[state.league].beta) state.league = "nfl";
+  const l = latest(); state.season = l.season; state.group = l.group;
+  $("#updated").textContent = "Ratings updated " + state.data.generated;
+  const ls = seasons("nfl"); if (ls.length) $("#foot-best").innerHTML = `<a href="#best-nfl-${ls[0][0]}">Best games of the season</a>`;
+  if (window.TC_SW && "serviceWorker" in navigator) { try { navigator.serviceWorker.register(window.TC_SW).catch(() => {}); } catch (e) {} }
+  const rl = state.data.config.replayLinks;
+  $("#foot-replays").innerHTML = Object.values(rl).flat().map((l) => `<li><a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.name)}</a></li>`).join("");
+  route();
+}
+boot();
+</script>
+</body>
+</html>

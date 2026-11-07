@@ -1,0 +1,71 @@
+{
+  "siteName": "Thrillcheck",
+  "donateUrl": "https://ko-fi.com/",
+  "showAdPlaceholders": true,
+  "replayLinks": {
+    "nfl": [
+      {
+        "name": "NFL+",
+        "url": "https://www.nfl.com/plus/"
+      },
+      {
+        "name": "NFL Game Pass (outside the US)",
+        "url": "https://www.dazn.com/"
+      }
+    ],
+    "nba": [
+      {
+        "name": "NBA League Pass",
+        "url": "https://www.nba.com/watch/league-pass-stream"
+      }
+    ],
+    "epl": [
+      {
+        "name": "Peacock (US)",
+        "url": "https://www.peacocktv.com/sports/premier-league"
+      },
+      {
+        "name": "NBC Sports",
+        "url": "https://www.nbcsports.com/soccer/premier-league"
+      }
+    ],
+    "laliga": [
+      {
+        "name": "ESPN+ (US)",
+        "url": "https://plus.espn.com/"
+      }
+    ]
+  },
+  "feedbackEndpoint": "",
+  "donate": {
+    "mode": "list",
+    "paysFor": [
+      "AI ratings within about an hour of every game",
+      "A live data feed for ratings within minutes of the final whistle",
+      "New leagues, starting with college football and the NHL"
+    ],
+    "supporters": 0,
+    "showSupportersFrom": 10,
+    "raised": 0,
+    "stretchGoals": [
+      {
+        "amount": 40,
+        "unlock": "NFL ratings within minutes of the final whistle"
+      },
+      {
+        "amount": 80,
+        "unlock": "Live NBA ratings too"
+      },
+      {
+        "amount": 150,
+        "unlock": "College football and alerts for your teams"
+      }
+    ]
+  },
+  "contactEmail": "",
+  "policyDate": "November 6, 2026",
+  "votes": {
+    "supabaseUrl": "",
+    "supabaseAnonKey": ""
+  }
+}
