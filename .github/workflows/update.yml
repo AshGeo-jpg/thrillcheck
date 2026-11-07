@@ -37,8 +37,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: site/og
-          key: og-${{ github.run_id }}
-          restore-keys: og-
+          key: og2-${{ github.run_id }}
+          restore-keys: og2-
       - name: Download play-by-play data
         run: |
           mkdir -p data
@@ -63,3 +63,4 @@ jobs:
     environment: { name: github-pages }
     steps:
       - uses: actions/deploy-pages@v4
+        with: { timeout: 1800000 }

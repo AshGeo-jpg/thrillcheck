@@ -317,6 +317,22 @@ def head_extra(root, site_url, og_image):
             f'<meta name="twitter:image" content="{img}">\n<script>window.TC_SW = "{root}sw.js";</script>')
 
 
+def split_template(tpl):
+    """Deployed site: move the shared design and code into app.css / app.js so every page stays small."""
+    css = tpl[tpl.index("<style>") + 7: tpl.index("</style>")]
+    i = tpl.rindex("<script>"); j = tpl.rindex("</script>")
+    js = (tpl[i + 8: j].replace("const RAW = __DATA__;", "const RAW = window.TC_DATA || null;")
+          .replace('const START = "__START__";', 'const START = window.TC_START || "";')
+          .replace('fetch("__DATAPATH__")', "fetch(window.TC_DATAPATH)"))
+    v = hashlib.md5((css + js).encode()).hexdigest()[:8]
+    page = (tpl[:tpl.index("<style>")] + f'<link rel="stylesheet" href="__ROOT__app.css?v={v}">'
+            + tpl[tpl.index("</style>") + 8: i]
+            + f'<script>window.TC_START = "__START__"; window.TC_DATAPATH = "__DATAPATH__";</script>\n'
+            + f'<script src="__ROOT__app.js?v={v}"></script>' + tpl[j + 9:])
+    assert "__DATA__" not in js and "__START__" not in js and "__DATAPATH__" not in js
+    return page, css, js
+
+
 def render(template, title, desc, data_json, start, canonical, data_path="data/games.json", extra=""):
     return (template.replace("__HEADEXTRA__", extra).replace("__DATAPATH__", data_path).replace("__TITLE__", title)
             .replace("__DESC__", desc).replace("__CANONICAL__", canonical).replace("__START__", start)
@@ -373,6 +389,9 @@ def main():
     json.dump(payload, open(os.path.join(SITE, "data", "games.json"), "w"), separators=(",", ":"))
     json.dump(MANIFEST, open(os.path.join(SITE, "manifest.webmanifest"), "w"), indent=1)
     open(os.path.join(SITE, "sw.js"), "w").write(SW)
+    page_tpl, css, js = split_template(tpl)
+    open(os.path.join(SITE, "app.css"), "w").write(css)
+    open(os.path.join(SITE, "app.js"), "w").write(js)
 
     def page(rel, title, desc, start, image="thrillcheck.png"):
         depth = rel.count("/") + (1 if rel else 0)
@@ -381,7 +400,7 @@ def main():
         os.makedirs(d, exist_ok=True)
         url = f"{a.site_url}/{rel + '/' if rel else ''}"
         open(os.path.join(d, "index.html"), "w").write(render(
-            tpl, title, desc, "null", start, url, root + "data/games.json", head_extra(root, a.site_url, image)))
+            page_tpl.replace("__ROOT__", root), title, desc, "null", start, url, root + "data/games.json", head_extra(root, a.site_url, image)))
         urls.append(url)
 
     urls = []

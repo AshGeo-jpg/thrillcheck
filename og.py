@@ -80,7 +80,8 @@ def game_card(g, path):
     d.rounded_rectangle([930 - lw / 2 - 24, 470, 930 + lw / 2 + 24, 522], radius=26, fill=tuple(int(c * .22) + int(BG[i] * .78) for i, c in enumerate(col)))
     d.text((930 - lw / 2, 478), lab, font=lf, fill=col)
     d.text((64, 556), "Thrillcheck the game.  No scores. No spoilers.", font=font("figtree-700.ttf", 28), fill=MUTED)
-    img.save(path, optimize=True)
+    # 256-colour PNG: looks the same for these flat graphics at under half the file size
+    img.quantize(colors=256, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE).save(path, optimize=True)
 
 
 def site_card(path, total):
@@ -111,11 +112,17 @@ def build_all(games, site_dir, force=False):
     out = os.path.join(site_dir, "og")
     os.makedirs(out, exist_ok=True)
     made = 0
+    keep = {"thrillcheck.png"}
     for g in games:
-        p = os.path.join(out, f"{g['id']}-{g['score']}.png")  # score in the name: rescoring makes a new image
+        name = f"{g['id']}-{g['score']}.png"  # score in the name: rescoring makes a new image
+        keep.add(name)
+        p = os.path.join(out, name)
         if force or not os.path.exists(p):
             game_card(g, p)
             made += 1
+    for f in os.listdir(out):  # drop images for old scores so the site does not keep growing
+        if f.endswith(".png") and f not in keep:
+            os.remove(os.path.join(out, f))
     site_card(os.path.join(out, "thrillcheck.png"), len(games))
     for n in (192, 512, 180):
         icon(os.path.join(site_dir, f"icon-{n}.png"), n)
