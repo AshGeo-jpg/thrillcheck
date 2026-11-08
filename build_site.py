@@ -23,6 +23,7 @@ import os
 import re
 from datetime import datetime, timezone
 
+import numpy as np
 import pandas as pd
 
 import score_games as S
@@ -263,10 +264,20 @@ def soccer_color(t):
     return SOCCER_PALETTE[sum(map(ord, t["code"])) % len(SOCCER_PALETTE)]
 
 
-def build_soccer():
-    """Premier League and La Liga, rated by espn.py from goal and red-card timing."""
+def build_soccer(reference=None):
+    """Premier League and La Liga, rated by espn.py from goal and red-card timing.
+
+    reference: NFL/NBA Thrill Scores. Each soccer match keeps its rank within its league, but its score is read
+    off the same spread as the NFL/NBA scores, so "Must watch" means roughly the top slice of games everywhere."""
     import espn
     rows = espn.score_soccer(espn.load_cache())
+    if reference:
+        ref = np.sort(np.asarray(reference, dtype=float))
+        for lg in {r["league"] for r in rows}:
+            sub = [r for r in rows if r["league"] == lg]
+            ranks = pd.Series([r["watch_score"] for r in sub]).rank(pct=True, method="average").to_numpy()
+            for r, p in zip(sub, ranks):
+                r["watch_score"] = int(round(np.quantile(ref, min(max(p - 0.5 / len(sub), 0), 1))))
     games, used = [], {}
     for r in rows:
         lg = r["league"]
@@ -384,7 +395,7 @@ def main():
     config = json.load(open(CONFIG))
     games = build_games(a.seasons) + (build_nba(a.nba_seasons) if a.nba_seasons else [])
     try:
-        games += build_soccer()
+        games += build_soccer([g["score"] for g in games if g["league"] in ("nfl", "nba")])
     except Exception as e:
         print(f"Soccer skipped: {e}")
     for g in games:
