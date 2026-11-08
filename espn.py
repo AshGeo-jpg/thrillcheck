@@ -152,7 +152,7 @@ def nba_rows(summary):
             "game_id": str(comp["id"]), "season": int(h["season"]["year"]), "season_type": int(h["season"].get("type", 2)),
             "period_number": per, "start_game_seconds_remaining": float(secs), "end_game_seconds_remaining": float(secs),
             "away_score": int(p.get("awayScore") or 0), "home_score": int(p.get("homeScore") or 0),
-            "game_date_time": t, "home_team_abbrev": tm["home"]["abbreviation"], "away_team_abbrev": tm["away"]["abbreviation"],
+            "game_date_time": t.isoformat(), "home_team_abbrev": tm["home"]["abbreviation"], "away_team_abbrev": tm["away"]["abbreviation"],
             "home_team_name": tm["home"].get("location"), "home_team_mascot": tm["home"].get("name"),
             "away_team_name": tm["away"].get("location"), "away_team_mascot": tm["away"].get("name"),
         })
@@ -346,7 +346,7 @@ def main():
             update_soccer(lg, cache)
         except Exception as e:
             print(f"{lg.upper()}: ESPN update failed ({e})")
-    json.dump(cache, open(CACHE, "w"), separators=(",", ":"))
+    json.dump(cache, open(CACHE, "w"), separators=(",", ":"), default=str)
 
 
 if __name__ == "__main__":
