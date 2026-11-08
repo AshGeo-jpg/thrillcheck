@@ -16,8 +16,18 @@ def add(name, data):
     ti = tarfile.TarInfo(name); ti.size = len(data); tar.addfile(ti, io.BytesIO(data))
 
 end = date.today(); start = end - timedelta(days=10)
+import urllib.error
+for u in ["football/nfl/scoreboard", "football/nfl/scoreboard?dates=20261101", f"football/nfl/scoreboard?dates={start:%Y%m%d}-{end:%Y%m%d}",
+          "football/nfl/scoreboard?seasontype=2&week=9", "soccer/eng.1/scoreboard", "soccer/eng.1/scoreboard?dates=20261101",
+          "soccer/eng.1/scoreboard?dates=20261025-20261107&limit=100", "basketball/nba/scoreboard?dates=20261105"]:
+    try:
+        d = get(f"{BASE}/{u}"); print("OK ", u, len(d), len(json.loads(d).get("events", [])))
+    except urllib.error.HTTPError as ex:
+        print("ERR", u, ex.code, ex.read()[:200])
+    except Exception as ex:
+        print("ERR", u, ex)
 for lg, path in LEAGUES.items():
-    url = f"{BASE}/{path}/scoreboard?dates={start:%Y%m%d}-{end:%Y%m%d}&limit=300"
+    url = f"{BASE}/{path}/scoreboard?dates={start:%Y%m%d}-{end:%Y%m%d}&limit=100"
     try:
         sb = get(url); add(f"{lg}_scoreboard.json", sb)
         evs = [e for e in json.loads(sb).get("events", []) if e.get("status", {}).get("type", {}).get("completed")]
