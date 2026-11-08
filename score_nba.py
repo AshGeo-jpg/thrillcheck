@@ -34,12 +34,27 @@ LABELS = [(80, "Must watch"), (60, "Worth watching"), (40, "Fans only"), (0, "Sk
 
 
 def load(season):
+    """hoopR play-by-play, plus recent games from ESPN (espn.py) that hoopR hasn't posted yet."""
     path = os.path.join(HERE, "data", f"nba_pbp_{season}.parquet")
     if not os.path.exists(path):
         os.makedirs(os.path.dirname(path), exist_ok=True)
         print("Downloading", RAW.format(season))
-        pd.read_parquet(RAW.format(season), columns=COLS).to_parquet(path)
-    return pd.read_parquet(path, columns=COLS)
+        try:
+            pd.read_parquet(RAW.format(season), columns=COLS).to_parquet(path)
+        except Exception as e:
+            print(f"  could not download hoopR {season}: {e}")
+    frames = []
+    if os.path.exists(path):
+        h = pd.read_parquet(path, columns=COLS)
+        h["game_id"] = h.game_id.astype(str)
+        frames.append(h)
+    espn = os.path.join(HERE, "data", "espn_nba.parquet")
+    if os.path.exists(espn):
+        e = pd.read_parquet(espn)
+        e = e[(e.season == season) & ~e.game_id.astype(str).isin(frames[0].game_id.unique() if frames else [])]
+        if len(e):
+            frames.append(e[COLS])
+    return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame(columns=COLS)
 
 
 def phi(x):

@@ -34,14 +34,27 @@ WEIGHTS = {"excitement": 0.35, "late_drama": 0.25, "comeback": 0.15,
 LABELS = [(80, "Must watch"), (60, "Worth watching"), (40, "Fans only"), (0, "Skip it")]
 
 
-def load(season):
+def load(season, cols=COLS):
+    """nflverse play-by-play, plus recent games from ESPN (espn.py) that nflverse hasn't posted yet."""
     path = os.path.join(HERE, "data", f"pbp_{season}.parquet")
     if not os.path.exists(path):
         os.makedirs(os.path.dirname(path), exist_ok=True)
         url = f"https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_{season}.parquet"
         print(f"Downloading {url}")
-        pd.read_parquet(url, columns=COLS).to_parquet(path)
-    return pd.read_parquet(path, columns=COLS)
+        try:
+            pd.read_parquet(url).to_parquet(path)
+        except Exception as e:
+            print(f"  could not download nflverse {season}: {e}")
+    frames = []
+    if os.path.exists(path):
+        frames.append(pd.read_parquet(path, columns=cols))
+    espn = os.path.join(HERE, "data", "espn_nfl.parquet")
+    if os.path.exists(espn):
+        e = pd.read_parquet(espn)
+        e = e[(e.season == season) & ~e.game_id.isin(frames[0].game_id.unique() if frames else [])]
+        if len(e):
+            frames.append(e[cols])
+    return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame(columns=cols)
 
 
 def game_features(g):

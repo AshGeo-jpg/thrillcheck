@@ -25,45 +25,36 @@ python build_site.py --inline     # makes site/preview.html, open it in a browse
 1. Make a free GitHub account and a new repository called `thrillcheck`. Upload everything in this folder.
 2. In the repository: **Settings > Pages > Source: GitHub Actions**.
 3. **Actions tab > Update Thrillcheck > Run workflow.** Your site goes live at `https://<your-username>.github.io/thrillcheck/`.
-4. From then on it updates itself every 3 hours.
+4. From then on it updates itself every 30 to 60 minutes.
 
 Custom domain: use `thrillcheck.com`, add it under **Settings > Pages > Custom domain**, then set a repository variable `SITE_URL` to `https://thrillcheck.com`.
 
 
-## How ratings work now
+## How ratings work now (free, no keys)
 
-| League | First rating | Confirmed by |
+| League | Where the rating comes from | How fast |
 |---|---|---|
-| NFL, NBA | **Early rating** about an hour after the game, from match reports read by AI (`ai_rater.py`) | Play-by-play formula when the free data arrives (same night or next morning) |
-| Premier League, La Liga (beta) | AI rating from match reports | Stays as is (no free play-by-play for soccer) |
+| NFL | ESPN play-by-play with ESPN's win probability (`espn.py`), backed up by nflverse | Within about an hour of the final whistle |
+| NBA | ESPN play-by-play (`espn.py`), backed up by hoopR | Within about an hour |
+| Premier League, La Liga (beta) | ESPN goal and red-card timing (`espn.py`) | Within about an hour |
 
-Accuracy guard: the AI must find the same final score on at least two different websites and be at least 60% sure,
-or the game is marked pending and retried an hour later. Every game is scored with the same checklist and formula.
+NFL and NBA games get the same formula whichever source they come from: total swing in win probability,
+late drama, how close the winner came to losing, final margin, lead changes and overtime, each turned into a
+percentile against every other game. When nflverse or hoopR posts a game, that copy is used and ESPN's is
+dropped. If ESPN ever stops working, nflverse and hoopR still rate NFL and NBA games, just a day or so later.
 
-`results/ai_check.csv` compares AI ratings with the play-by-play ratings for every NFL/NBA game that has both,
-so you can see how often the AI is off by 20+ points.
+Soccer uses goal timing: late goals that change the result, total goals, final margin, how many times the
+result flipped, comebacks, red cards and stoppage-time drama. Each match is compared with every match in the
+same league this season and last season. Own goals are checked against the final score.
 
-### Keys to add (Settings > Secrets and variables > Actions)
+ESPN does not officially offer this feed to the public, so it could change or stop. `espn.py` fails soft:
+a broken request is skipped and the site still builds.
 
-| Secret | What for | Cost |
-|---|---|---|
-| `BRAVE_API_KEY` | Web search for match reports | $5 per 1,000 searches, with $5 free credit a month |
-| `ANTHROPIC_API_KEY` | Claude reads the reports | A fraction of a cent per game on Haiku |
-| `FOOTBALL_DATA_KEY` | Premier League and La Liga fixture lists | Free at football-data.org |
-
-Optional variable `CLAUDE_MODEL`: set to `claude-sonnet-5-5` for sharper judgment at a higher cost.
-Expected total in season: roughly $10 to $25 a month. The `--limit 40` setting caps games rated per run.
+`ai_rater.py` is the older AI rater (web search plus Claude). It is no longer part of the workflow but is kept in
+case ESPN ever stops working for soccer.
 
 **Keep the GitHub repository public.** The workflow runs every 30 minutes, which is free and unlimited on public
-repositories. Your keys stay private in Secrets either way.
-
-## Turn on web buzz (optional, about $3 to $5 a season)
-
-Add two repository secrets under **Settings > Secrets and variables > Actions**:
-- `BRAVE_API_KEY` from api-dashboard.search.brave.com
-- `ANTHROPIC_API_KEY` from console.anthropic.com
-
-The workflow will then add buzz and blurbs to the 20 newest games on each run, and remember results so each game is only paid for once.
+repositories.
 
 ## Money settings
 

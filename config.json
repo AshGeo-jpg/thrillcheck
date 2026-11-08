@@ -40,9 +40,9 @@
   "donate": {
     "mode": "list",
     "paysFor": [
-      "AI ratings within about an hour of every game",
-      "A live data feed for ratings within minutes of the final whistle",
-      "New leagues, starting with college football and the NHL"
+      "Keeping ratings coming after every game",
+      "New leagues, starting with college football and the NHL",
+      "Alerts for your teams and a weekly best-of email"
     ],
     "supporters": 0,
     "showSupportersFrom": 10,

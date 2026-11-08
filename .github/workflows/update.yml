@@ -1,8 +1,9 @@
-# Rebuilds Thrillcheck every 30 minutes:
-#   1. Downloads free play-by-play data (NFL, NBA) and builds the data ratings.
-#   2. AI rates games that just finished (early NFL/NBA ratings, Premier League, La Liga).
-#   3. Rebuilds the site and publishes it to GitHub Pages.
-# Keep the repository PUBLIC so GitHub Actions minutes are free and unlimited (keys stay secret).
+# Rebuilds Thrillcheck every 30 minutes (GitHub may run it a little less often):
+#   1. Pulls finished games from ESPN's free public feed (NFL, NBA, Premier League, La Liga).
+#   2. Downloads the free nflverse / hoopR play-by-play as a backup for NFL and NBA.
+#   3. Rates every game, rebuilds the site and publishes it to GitHub Pages.
+# Costs nothing: no API keys needed.
+# Keep the repository PUBLIC so GitHub Actions minutes are free and unlimited.
 name: Update Thrillcheck
 on:
   schedule:
@@ -17,22 +18,18 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      BRAVE_API_KEY: ${{ secrets.BRAVE_API_KEY }}
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      FOOTBALL_DATA_KEY: ${{ secrets.FOOTBALL_DATA_KEY }}
-      CLAUDE_MODEL: ${{ vars.CLAUDE_MODEL || 'claude-haiku-5-5' }}
       SITE_URL: ${{ vars.SITE_URL || 'https://thrillcheck.com' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - run: pip install pandas pyarrow requests anthropic pillow
-      - name: Keep AI ratings between runs (each game is only paid for once)
+      - run: pip install pandas pyarrow requests pillow
+      - name: Keep ESPN data between runs (each finished game or matchday is fetched once)
         uses: actions/cache@v4
         with:
-          path: results/ai_ratings.json
-          key: ai-${{ github.run_id }}
-          restore-keys: ai-
+          path: results/espn_cache.json
+          key: espn-${{ github.run_id }}
+          restore-keys: espn-
       - name: Keep share images between runs (only new or rescored games are drawn)
         uses: actions/cache@v4
         with:
@@ -43,17 +40,14 @@ jobs:
         run: |
           mkdir -p data
           for y in 2025 2026; do
-            curl -sL -o data/pbp_$y.parquet https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_$y.parquet
+            curl -sfL -o data/pbp_$y.parquet https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_$y.parquet || rm -f data/pbp_$y.parquet
           done
           for y in 2026 2027; do
-            curl -sL -o data/nba_pbp_$y.parquet https://raw.githubusercontent.com/sportsdataverse/hoopR-nba-data/main/nba/pbp/parquet/play_by_play_$y.parquet
+            curl -sfL -o data/nba_pbp_$y.parquet https://raw.githubusercontent.com/sportsdataverse/hoopR-nba-data/main/nba/pbp/parquet/play_by_play_$y.parquet || rm -f data/nba_pbp_$y.parquet
           done
-      - name: Build data ratings
-        run: python build_site.py --site-url "$SITE_URL"
-      - name: AI ratings for games that just finished (only if API keys are set)
-        if: ${{ env.BRAVE_API_KEY != '' && env.ANTHROPIC_API_KEY != '' }}
-        run: python ai_rater.py --limit 40
-      - name: Rebuild site with AI ratings
+      - name: Pull finished games from ESPN
+        run: python espn.py
+      - name: Rate games and build the site
         run: python build_site.py --site-url "$SITE_URL"
       - uses: actions/upload-pages-artifact@v3
         with: { path: site }

@@ -417,7 +417,7 @@ footer ul a:hover { color: var(--accent); }
   <div class="wrap">
     <div>
       <span class="wordmark">Thrill<span>check</span></span>
-      <p><strong>Thrillcheck the game.</strong> We rate NFL, NBA, Premier League and La Liga games from play-by-play data and match reports. Soccer ratings are in beta. Scores stay hidden unless you ask.</p>
+      <p><strong>Thrillcheck the game.</strong> We rate NFL, NBA, Premier League and La Liga games from play-by-play data. Soccer ratings are in beta. Scores stay hidden unless you ask.</p>
     </div>
     <div><h4>Explore</h4><ul><li><a href="#" id="foot-week">This week's games</a></li><li><a href="#how">How we rate games</a></li><li><a href="#support">Support Thrillcheck</a></li><li><a href="#whats-next">What's next</a></li><li><a href="#feedback">Send feedback</a></li></ul></div>
     <div><h4>Watch replays</h4><ul id="foot-replays"></ul></div>
@@ -458,13 +458,13 @@ const LEAGUES = {
   laliga: { name: "La Liga", short: "LALIGA", unit: "matchweek", pick: "Match of the week", beta: true, soccer: true },
 };
 const RATING_NOTE = {
-  early: "Early rating from match reports, read by AI. It's checked against play-by-play data once that arrives.",
-  aiFinal: "Rated from match reports, read by AI. Soccer ratings are in beta.",
+  early: "Early rating. It's confirmed once the full play-by-play data arrives.",
+  aiFinal: "Rated from the timing of every goal and red card. Soccer ratings are in beta while we fine-tune the formula.",
   final: "Rated from play-by-play data.",
 };
 function ratingBadge(g) {
   if (g.rating === "early") return `<span class="rb early" title="${RATING_NOTE.early}">Early rating</span>`;
-  if (LEAGUES[g.league].soccer) return `<span class="rb beta" title="${RATING_NOTE.aiFinal}">AI-rated &middot; Beta</span>`;
+  if (LEAGUES[g.league].soccer) return `<span class="rb beta" title="${RATING_NOTE.aiFinal}">Beta</span>`;
   return "";
 }
 const store = {
@@ -632,8 +632,8 @@ function panels() {
     <section class="panel" id="how">
       <h3>How we rate games</h3>
       <ol class="steps">
-        <li>Within about an hour of the final whistle, AI reads match reports and checks the facts across at least two sources. That's the Early rating.</li>
-        <li>When full play-by-play data arrives, we re-score the game from every play and confirm the rating.</li>
+        <li>Shortly after the final whistle, we pull the game's play-by-play: every score, swing and late twist.</li>
+        <li>We measure how much it swung back and forth, how tense the finish was and how close the winner came to losing. For soccer, that means goal timing, comebacks and red cards.</li>
         <li>It all becomes one Thrill Score from 0 to 100. The result stays hidden unless you tap Reveal.</li>
       </ol>
     </section>
@@ -641,12 +641,12 @@ function panels() {
       <span class="soon">Updates coming soon</span>
       <h3>What's next</h3>
       <ul class="road">
-        <li><b>Premier League and La Liga</b><span>In beta now, rated from match reports</span></li>
+        <li><b>Premier League and La Liga</b><span>In beta now, rated from every goal and red card</span></li>
         <li><b>College football</b><span>Saturdays get the Thrillcheck treatment</span></li>
         <li><b>NHL and MLB</b><span>More leagues, same no-spoiler rules</span></li>
         <li><b>Alerts for your teams</b><span>A ping when your game is a Must watch</span></li>
-        <li><b>Ratings in minutes</b><span>Live data, funded by supporters</span></li>
-        <li><b>Thrillcheck Plus</b><span>No ads, early ratings, and more</span></li>
+        <li><b>Weekly best-of</b><span>The week's must-watch games in your inbox, no spoilers</span></li>
+        <li><b>Thrillcheck Plus</b><span>No ads, plus extra features</span></li>
       </ul>
     </section>
   </div>
@@ -722,7 +722,7 @@ function controls() {
 function emptyLeague() {
   const lg = L();
   return `<section class="soon-league"><span class="soon">Beta &middot; Coming online</span><h3>${lg.name} ratings are almost here</h3>
-    <p>${lg.name} matches will be rated within about an hour of the final whistle, from match reports read by AI and double-checked across sources. Ratings start as soon as the site goes live.</p>
+    <p>${lg.name} matches are rated shortly after the final whistle from the timing of every goal and red card. Check back after the next matchday.</p>
     <a class="btn gold" href="#feedback">Tell us which leagues you want</a></section>`;
 }
 
@@ -832,7 +832,7 @@ const PAGES = {
   about: () => `<h1>About Thrillcheck</h1>
     <p>Thrillcheck answers one question: is this game worth watching? Missed a game and want to catch the replay without knowing how it ended? We rate every NFL and NBA game, and Premier League and La Liga matches in beta, from 0 to 100, and we never show the score unless you ask.</p>
     <h2>How ratings work</h2>
-    <p>About an hour after the final whistle, AI reads match reports and checks the key facts across at least two sources to give an early rating. When full play-by-play data arrives, we re-score the game from every play: how much it swung back and forth, how tense the finish was, and how close the winner came to losing. Every game is scored with the same formula.</p>
+    <p>Shortly after the final whistle, we score the game from its play-by-play data: how much it swung back and forth, how tense the finish was, and how close the winner came to losing. Soccer matches are scored from the timing of every goal and red card, so late equalizers and comebacks count for a lot. Each game is compared with every other game in its league, and every game in a league is scored with the same formula.</p>
     <h2>Spoiler promise</h2>
     <p>No scores, winners or hints in our titles, descriptions, share images or link previews. Final scores only appear when you tap Reveal or mark a game as watched.</p>
     <h2>Independent</h2>

@@ -105,7 +105,7 @@ def extra_columns(seasons):
             "receiver_player_name", "receiving_yards", "yards_gained"]
     out = []
     for s in seasons:
-        p = pd.read_parquet(os.path.join(HERE, "data", f"pbp_{s}.parquet"), columns=cols)
+        p = S.load(s, cols)
         for gid, g in p.groupby("game_id"):
             pas = g.groupby("passer_player_name").passing_yards.sum().max() if g.passing_yards.notna().any() else 0
             rus = g.groupby("rusher_player_name").rushing_yards.sum().max() if g.rushing_yards.notna().any() else 0
@@ -249,50 +249,49 @@ def build_nba(seasons):
     return games
 
 
-AI_CACHE = os.path.join(HERE, "results", "ai_ratings.json")
-FIXTURES = os.path.join(HERE, "results", "fixtures.json")
+SOCCER_PALETTE = ["#1D4ED8", "#B91C1C", "#047857", "#7C3AED", "#C2410C", "#0E7490", "#9D174D", "#4D7C0F"]
 
 
-def merge_ai(games):
-    """Add AI-rated games (early NFL/NBA ratings, soccer) and compare AI vs data where both exist."""
-    ai = json.load(open(AI_CACHE)) if os.path.exists(AI_CACHE) else {}
-    fixtures = json.load(open(FIXTURES)) if os.path.exists(FIXTURES) else []
-    by_id = {g["id"]: g for g in games}
-    checks = []
-    for g in games:
-        g.setdefault("rating", "final")
-        r = ai.get(g["id"])
-        if r and r.get("score") is not None:
-            g["aiScore"] = r["score"]
-            checks.append((g["id"], g["score"], r["score"], r["score"] - g["score"]))
-    used = {}
-    for fx in fixtures:
-        r = ai.get(fx["id"])
-        if fx["id"] in by_id or not r or r.get("status") not in ("early", "final") or r.get("score") is None:
-            continue
-        score = int(r["score"])
+def soccer_color(t):
+    """ESPN's main colour, unless it would vanish on the dark cards (white/near-black), then the alternate."""
+    for c in (t.get("color"), t.get("alt")):
+        if c and len(c) == 6:
+            r, g, b = int(c[:2], 16), int(c[2:4], 16), int(c[4:], 16)
+            lum = 0.2126 * r + 0.7152 * g + 0.0722 * b
+            if 40 < lum < 215:
+                return "#" + c
+    return SOCCER_PALETTE[sum(map(ord, t["code"])) % len(SOCCER_PALETTE)]
+
+
+def build_soccer():
+    """Premier League and La Liga, rated by espn.py from goal and red-card timing."""
+    import espn
+    rows = espn.score_soccer(espn.load_cache())
+    games, used = [], {}
+    for r in rows:
+        lg = r["league"]
+        gid = f"{lg}-{r['date']}-{r['away']['code']}-{r['home']['code']}".lower()
+        score = int(r["watch_score"])
         label = next(l for t, l in S.LABELS if score >= t)
-        blurb = r.get("blurb") or ""
-        if not blurb or SPOILER.search(blurb):
-            opts = BLURBS[label]
-            seen = used.setdefault((fx["league"], fx["group"], label), set())
-            start = int(hashlib.md5(fx["id"].encode()).hexdigest(), 16) % len(opts)
-            blurb = next((opts[(start + i) % len(opts)] for i in range(len(opts)) if opts[(start + i) % len(opts)] not in seen), opts[start])
-            seen.add(blurb)
-        g = {k: v for k, v in fx.items() if k != "start"}
-        g.update({"score": score, "label": label, "blurb": blurb, "final": r["final"],
-                  "rating": r["status"], "source": "match reports, read by AI"})
-        games.append(g)
-    if checks:
-        import csv
-        os.makedirs(os.path.join(HERE, "results"), exist_ok=True)
-        with open(os.path.join(HERE, "results", "ai_check.csv"), "w", newline="") as f:
-            w = csv.writer(f)
-            w.writerow(["game_id", "data_score", "ai_score", "difference"])
-            w.writerows(sorted(checks, key=lambda c: -abs(c[3])))
-        big = [c for c in checks if abs(c[3]) >= 20]
-        print(f"AI vs data: {len(checks)} games compared, {len(big)} differ by 20+ points (see results/ai_check.csv)")
-    games.sort(key=lambda g: (g["league"], g["season"], g["groupOrder"], g["kickoff"]))
+        mw = int(r["matchweek"])
+        opts = BLURBS[label]
+        seen = used.setdefault((lg, r["season"], mw, label), set())
+        start = int(hashlib.md5(gid.encode()).hexdigest(), 16) % len(opts)
+        blurb = next((opts[(start + i) % len(opts)] for i in range(len(opts)) if opts[(start + i) % len(opts)] not in seen), opts[start])
+        seen.add(blurb)
+        assert not SPOILER.search(blurb), blurb
+        t = pd.Timestamp(r["start"])
+        a, h = r["away"], r["home"]
+        games.append({
+            "id": gid, "league": lg, "season": r["season"] + 1, "seasonLabel": f"{r['season']}-{str(r['season'] + 1)[2:]}",
+            "group": str(mw), "groupOrder": mw, "groupLabel": f"Matchweek {mw}", "groupShort": f"MW{mw}",
+            "date": r["date"], "kickoff": t.strftime("%a %b %-d · %-I:%M %p ET"),
+            "away": a["code"], "home": h["code"], "awayName": a["name"], "homeName": h["name"],
+            "awayShort": a["short"], "homeShort": h["short"], "awayColor": soccer_color(a), "homeColor": soccer_color(h),
+            "score": score, "label": label, "blurb": blurb, "vibes": [], "source": "goal-by-goal data",
+            "final": {"away": int(r["as"]), "home": int(r["hs"]), "ot": False},
+        })
+    games.sort(key=lambda g: (g["season"], g["groupOrder"], g["kickoff"]))
     return games
 
 
@@ -368,7 +367,14 @@ def main():
     a = ap.parse_args()
 
     config = json.load(open(CONFIG))
-    games = merge_ai(build_games(a.seasons) + (build_nba(a.nba_seasons) if a.nba_seasons else []))
+    games = build_games(a.seasons) + (build_nba(a.nba_seasons) if a.nba_seasons else [])
+    try:
+        games += build_soccer()
+    except Exception as e:
+        print(f"Soccer skipped: {e}")
+    for g in games:
+        g.setdefault("rating", "final")
+    games.sort(key=lambda g: (g["league"], g["season"], g["groupOrder"], g["kickoff"]))
     payload = {"generated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
                "config": config, "games": games}
     tpl = open(TEMPLATE).read()
