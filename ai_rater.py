@@ -272,6 +272,9 @@ def now():
     return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
 
+MAX_TRIES = 6  # each try is 2 searches + 1 Claude call
+
+
 def due(fx, cache, data_ids):
     """Finished by the clock, not already rated by data, and not already rated (pending retries hourly)."""
     if fx["id"] in data_ids:
@@ -283,6 +286,8 @@ def due(fx, cache, data_ids):
     if not c:
         return True
     if c.get("status") == "pending":
+        if c.get("tries", 1) >= MAX_TRIES:  # give up after a few hours; the free data still rates NFL/NBA later
+            return False
         return pd.Timestamp.now(tz="UTC") - pd.Timestamp(c.get("checked", "2000-01-01 00:00 UTC").replace(" UTC", ""), tz="UTC") > timedelta(minutes=55)
     return False
 
@@ -307,10 +312,13 @@ def main():
     print(f"{len(fixtures)} fixtures, {len(todo)} to rate now")
     client, brave_key = anthropic.Anthropic(), os.environ["BRAVE_API_KEY"]
     for fx in todo:
+        tries = cache.get(fx["id"], {}).get("tries", 0) + 1
         try:
             cache[fx["id"]] = rate(fx, brave_key, client, SPOILER)
         except Exception as e:
-            cache[fx["id"]] = {"status": "pending", "reason": str(e)[:200], "checked": now()}
+            cache[fx["id"]] = {"status": "pending", "reason": str(e)[:200]}
+        if cache[fx["id"]].get("status") == "pending":
+            cache[fx["id"]].update(tries=tries, checked=now())
         print(fx["id"], cache[fx["id"]].get("status"), cache[fx["id"]].get("score"))
         json.dump(cache, open(CACHE, "w"), indent=1)
 
