@@ -295,6 +295,21 @@ def build_soccer():
     return games
 
 
+def report(games):
+    """Short summary in the build log: games per league, how the labels spread out, newest games."""
+    from collections import Counter
+    for lg in ("nfl", "nba", "epl", "laliga"):
+        gs = [g for g in games if g["league"] == lg]
+        if not gs:
+            print(f"{lg}: no games")
+            continue
+        c = Counter(g["label"] for g in gs)
+        print(f"{lg}: {len(gs)} games | " + ", ".join(f"{k} {c.get(k, 0)}" for k, _ in [(l, 0) for _, l in S.LABELS]))
+        for g in sorted(gs, key=lambda g: (g["date"], g["kickoff"]))[-6:]:
+            print(f"   {g['date']} {g['groupShort']:>5} {g['awayShort']} at {g['homeShort']}: {g['score']} {g['label']}"
+                  f"  [{g['final']['away']}-{g['final']['home']}]")
+
+
 def page_meta(g):
     when = f"{g['groupLabel']}, {g['seasonLabel']}" if g["league"] != "nba" else f"{g['groupLabel']}, {g['date'][:4]}"
     title = f"{g['awayShort']} at {g['homeShort']} ({when}): Worth watching? | Thrillcheck"
@@ -374,6 +389,7 @@ def main():
         print(f"Soccer skipped: {e}")
     for g in games:
         g.setdefault("rating", "final")
+    report(games)
     games.sort(key=lambda g: (g["league"], g["season"], g["groupOrder"], g["kickoff"]))
     payload = {"generated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
                "config": config, "games": games}
