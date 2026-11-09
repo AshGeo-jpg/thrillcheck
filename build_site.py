@@ -349,11 +349,12 @@ def split_template(tpl):
     js = (tpl[i + 8: j].replace("const RAW = __DATA__;", "const RAW = window.TC_DATA || null;")
           .replace('const START = "__START__";', 'const START = window.TC_START || "";')
           .replace('fetch("__DATAPATH__")', "fetch(window.TC_DATAPATH)"))
-    v = hashlib.md5((css + js).encode()).hexdigest()[:8]
-    page = (tpl[:tpl.index("<style>")] + f'<link rel="stylesheet" href="__ROOT__app.css?v={v}">'
+    # Stable file names (no version tag) so a design change only rewrites app.css / app.js, not every page.
+    # The service worker fetches them network-first, so visitors still get the new version straight away.
+    page = (tpl[:tpl.index("<style>")] + '<link rel="stylesheet" href="__ROOT__app.css">'
             + tpl[tpl.index("</style>") + 8: i]
             + f'<script>window.TC_START = "__START__"; window.TC_DATAPATH = "__DATAPATH__";</script>\n'
-            + f'<script src="__ROOT__app.js?v={v}"></script>' + tpl[j + 9:])
+            + '<script src="__ROOT__app.js"></script>' + tpl[j + 9:])
     assert "__DATA__" not in js and "__START__" not in js and "__DATAPATH__" not in js
     return page, css, js
 
