@@ -114,3 +114,16 @@ grant select on vote_totals to anon;
 
 Totals only show once a game has at least 5 votes. Free Supabase projects pause after a week with no activity,
 so this suits a site with regular visitors. The anon key is meant to be public; the policy above only allows adding votes.
+
+## Shorts for YouTube, Instagram and TikTok
+
+`make_short.py` turns the latest ratings into a vertical, spoiler-free "Worth the watch?" video
+(about 26 seconds, 1080x1920), plus a cover image and a ready-to-paste title, description and hashtags.
+
+- **Automatic:** the **Make Shorts** workflow runs every morning (about 8:17 AM Central) and makes one
+  Short per league from the live site. Open GitHub → Actions → Make Shorts → the newest run →
+  **Artifacts** → download `thrillcheck-shorts` (a zip with the .mp4, cover .png and caption .txt per league).
+  Click **Run workflow** to make a fresh set at any time.
+- **By hand:** `python make_short.py --league nfl` (or `nba`, `epl`, `laliga`; add `--group 9` for a specific week).
+- The video never shows a final score: the generator drops results before drawing anything.
+- It has a silent soundtrack. Add trending audio inside the YouTube, Instagram or TikTok app when you post.
