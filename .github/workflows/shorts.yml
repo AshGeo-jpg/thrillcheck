@@ -27,7 +27,8 @@ jobs:
           d = json.load(open("data/live_games.json"))
           cut = (datetime.date.today() - datetime.timedelta(days=12)).isoformat()
           keep = [{k: v for k, v in g.items() if k != "final"} for g in d["games"] if g["date"] >= cut]
-          print("GAMES:" + json.dumps(keep, separators=(",", ":")))
+          for g in keep:
+              print("GAME|" + json.dumps(g, separators=(",", ":")))
           PY
       - name: Make one Short per league
         run: |
