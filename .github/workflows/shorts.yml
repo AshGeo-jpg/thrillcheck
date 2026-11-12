@@ -1,4 +1,4 @@
-# Makes the spoiler-free "Worth the watch?" Shorts every morning from the live ratings.
+# Makes the day's spoiler-free Shorts every morning from the live ratings (schedule in shorts_config.json).
 # Download them from the Actions tab: open the latest "Make Shorts" run, then "Artifacts".
 name: Make Shorts
 on:
@@ -14,7 +14,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
-      - run: pip install pillow
+      - run: pip install pillow numpy
       - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
       - name: Get the live ratings
         run: |
@@ -25,16 +25,13 @@ jobs:
           python - <<'PY'
           import json, datetime
           d = json.load(open("data/live_games.json"))
-          cut = (datetime.date.today() - datetime.timedelta(days=12)).isoformat()
+          cut = (datetime.date.today() - datetime.timedelta(days=150)).isoformat()
           keep = [{k: v for k, v in g.items() if k != "final"} for g in d["games"] if g["date"] >= cut]
           for g in keep:
               print("GAME|" + json.dumps(g, separators=(",", ":")))
           PY
-      - name: Make one Short per league
-        run: |
-          for lg in nfl nba epl laliga; do
-            python make_short.py --league $lg --games data/live_games.json || echo "skipped $lg"
-          done
+      - name: Make today's Shorts (formats and schedule are in shorts_config.json)
+        run: python make_short.py --daily --games data/live_games.json
       - uses: actions/upload-artifact@v4
         with:
           name: thrillcheck-shorts

@@ -1,0 +1,68 @@
+{
+  "_help": "Settings for make_short.py. Change words, formats and the daily schedule here; no code changes needed.",
+
+  "cta": {
+    "headline": ["EVERY GAME RATED.", "NO SPOILERS."],
+    "url": "THRILLCHECK.COM",
+    "free_line": "Free for everyone.",
+    "pay_line": "Pay what you want. Even $0.",
+    "tagline": "Thrillcheck the game."
+  },
+
+  "sound": true,
+  "sound_volume": 0.8,
+  "mascot": true,
+
+  "leagues": ["nfl", "nba", "epl", "laliga"],
+  "max_age_days": 4,
+
+  "rotation": {
+    "_help": "Which formats the daily run makes on each weekday (Central time). Formats: worth, guess, teams, snooze.",
+    "mon": ["worth", "snooze"],
+    "tue": ["worth", "guess"],
+    "wed": ["guess"],
+    "thu": ["worth"],
+    "fri": ["teams"],
+    "sat": ["guess", "snooze"],
+    "sun": ["worth"]
+  },
+
+  "formats": {
+    "worth": {
+      "hook": ["WORTH", "THE WATCH?"],
+      "sub": "{n} games rated. No scores. No spoilers.",
+      "pill": "Here's what's worth your time",
+      "games": 4,
+      "title": "Which {league} {when} games are worth watching? (No spoilers)"
+    },
+    "guess": {
+      "hook": ["GUESS THE", "THRILL SCORE"],
+      "sub": "How exciting was it? 0 to 100.",
+      "pill": "Comment your guess before it fills",
+      "games": 3,
+      "pause_seconds": 2.6,
+      "title": "Guess the Thrill Score: {league} {when} edition"
+    },
+    "teams": {
+      "hook": ["MOST", "ENTERTAINING TEAM"],
+      "sub": "Ranked by average Thrill Score this season.",
+      "pill": "Is your team on the list?",
+      "top": 5,
+      "min_games": 3,
+      "title": "The most entertaining {league} teams to watch this season"
+    },
+    "snooze": {
+      "hook": ["SNOOZEFEST", "OF THE WEEK"],
+      "sub": "The least exciting game we rated.",
+      "pill": "Don't say we didn't warn you",
+      "title": "The most boring {league} game of {when} (No spoilers)"
+    }
+  },
+
+  "mascot_lines": {
+    "Must watch": ["Clear your schedule.", "Grab snacks. Trust me.", "Phone down. Press play.", "This is the one."],
+    "Worth watching": ["A solid pick tonight.", "Good game. Press play.", "Worth your evening.", "You won't regret it."],
+    "Fans only": ["Only if it's your team.", "Fans, enjoy. Everyone else, scroll.", "Meh. Your call.", "Team loyalty required."],
+    "Skip it": ["Your couch deserved better.", "Even I fell asleep.", "Watch paint dry instead.", "Hard pass."]
+  }
+}
