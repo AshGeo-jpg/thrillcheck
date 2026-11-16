@@ -1,5 +1,7 @@
 # Thrillcheck
 
+> © 2026 Thrillcheck. All rights reserved. This code is public only so the site can be hosted; no license is granted. See [LICENSE](LICENSE).
+
 Rates every NFL game from Must watch to Skip it, with no scores and no spoilers.
 
 ## What's in here

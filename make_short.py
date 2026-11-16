@@ -132,11 +132,15 @@ def wrap(d, text, f, max_w):
 def wordmark(d, x, y, size):
     f = font(DISPLAY_X, size)
     d.text((x, y), "THRILL", font=f, fill=INK)
-    d.text((x + d.textlength("THRILL", font=f), y), "CHECK", font=f, fill=GOLD)
+    x2 = x + d.textlength("THRILL", font=f)
+    d.text((x2, y), "CHECK", font=f, fill=GOLD)
+    d.text((x2 + d.textlength("CHECK", font=f) + size * 0.04, y - size * 0.02), "\u2122",
+           font=font(DISPLAY_X, size * 0.42), fill=MUTED)                 # trademark mark
 
 
 def wordmark_centered(d, y, size):
-    w = ImageDraw.Draw(Image.new("RGB", (8, 8))).textlength("THRILLCHECK", font=font(DISPLAY_X, size))
+    dd = ImageDraw.Draw(Image.new("RGB", (8, 8)))
+    w = dd.textlength("THRILLCHECK", font=font(DISPLAY_X, size)) + dd.textlength("\u2122", font=font(DISPLAY_X, size * 0.42))
     wordmark(d, W / 2 - w / 2, y, size)
 
 
@@ -603,6 +607,13 @@ def scene_outro(cfg):
 
 
 # ============================================================ assembling a video
+WATERMARK = "thrillcheck.com  \u00b7  \u00a9 Thrillcheck\u2122"
+
+
+def watermark(img):
+    """Faint mark on every frame, so a reposted or cropped copy still carries the name."""
+    d = ImageDraw.Draw(img)
+    d.text((64, 1832), WATERMARK, font=font(BODY_B, 30), fill=(64, 76, 98))
 def encode(frames, path):
     tmp = path[:-4] + ".part.mp4"
     cmd = ["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}",
@@ -611,6 +622,7 @@ def encode(frames, path):
     p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
     last = None
     for img in frames():
+        watermark(img)
         p.stdin.write(img.tobytes())
         last = img
     p.stdin.close()

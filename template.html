@@ -69,6 +69,7 @@ header.top { position: sticky; top: 0; z-index: 30; background: color-mix(in srg
 .mark { width: 30px; height: 30px; flex: none; }
 .wordmark { font: 900 28px/1 var(--display); letter-spacing: .03em; text-transform: uppercase; }
 .wordmark span { color: var(--accent); }
+.wordmark::after { content: "\2122"; font-size: .38em; vertical-align: super; margin-left: 2px; letter-spacing: 0; color: var(--muted); }
 .nav { display: flex; gap: 4px; margin-right: 6px; }
 .nav a { text-decoration: none; font-size: 14px; font-weight: 600; color: var(--muted); padding: 8px 12px; border-radius: 999px; }
 .nav a:hover { color: var(--ink); background: var(--surface); }
@@ -837,7 +838,9 @@ const PAGES = {
     <h2>Spoiler promise</h2>
     <p>No scores, winners or hints in our titles, descriptions, share images or link previews. Final scores only appear when you tap Reveal or mark a game as watched.</p>
     <h2>Independent</h2>
-    <p>Thrillcheck is an independent fan project. It is not affiliated with, endorsed by or connected to the NFL, NBA, Premier League, La Liga or any team. Team names are used only to identify games.</p>`,
+    <p>Thrillcheck is an independent fan project. It is not affiliated with, endorsed by or connected to the NFL, NBA, Premier League, La Liga or any team. Team names are used only to identify games.</p>
+    <h2>Copyright</h2>
+    <p>Thrillcheck\u2122, \u201cThrillcheck the game,\u201d the Thrill mascot, our Thrill Scores, videos, images, writing, site design and code are \u00a9 ${new Date().getFullYear()} Thrillcheck. All rights reserved. You're welcome to share links and screenshots with credit. Please don't copy the site, its ratings or our videos.</p>`,
   privacy: () => `<h1>Privacy policy</h1><p class="note">Last updated ${esc(state.data.config.policyDate || "")}</p>
     <p>Thrillcheck is built to collect as little as possible. We don't have user accounts.</p>
     <h2>What stays on your device</h2>
@@ -988,6 +991,12 @@ async function boot() {
   if (!leagueGames().length && !LEAGUES[state.league].beta) state.league = "nfl";
   const l = latest(); state.season = l.season; state.group = l.group;
   $("#updated").textContent = "Ratings updated " + state.data.generated;
+  const fine = $("footer .fine");
+  if (fine && !fine.querySelector(".copy")) {
+    const na = [...fine.querySelectorAll("span")].find((x) => x.textContent.startsWith("Not affiliated"));
+    if (na) na.textContent = "Not affiliated with the NFL, NBA, Premier League, La Liga or any team.";
+    fine.insertAdjacentHTML("beforeend", `<span class="copy">\u00a9 ${new Date().getFullYear()} Thrillcheck\u2122. All rights reserved.</span>`);
+  }
   const ls = seasons("nfl"); if (ls.length) $("#foot-best").innerHTML = `<a href="#best-nfl-${ls[0][0]}">Best games of the season</a>`;
   if (window.TC_SW && "serviceWorker" in navigator) { try { navigator.serviceWorker.register(window.TC_SW).catch(() => {}); } catch (e) {} }
   const rl = state.data.config.replayLinks;
