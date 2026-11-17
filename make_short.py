@@ -32,6 +32,8 @@ from datetime import date, datetime, timedelta, timezone
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
+import shorts_music
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 FONTS = os.path.join(HERE, "fonts")
 CONFIG = os.path.join(HERE, "shorts_config.json")
@@ -632,7 +634,7 @@ def encode(frames, path):
     return last
 
 
-def build(cfg, scenes, out_base, cover_index):
+def build(cfg, scenes, out_base, cover_index, style="hype"):
     work = tempfile.mkdtemp()
     parts, events, t0, cover = [], [], 0.0, None
     for i, (dur, frames, ev) in enumerate(scenes):
@@ -660,7 +662,22 @@ def build(cfg, scenes, out_base, cover_index):
             i1 = min(len(audio), i0 + len(s))
             audio[i0:i1] += s[: i1 - i0]
         audio *= cfg.get("sound_volume", 0.8)
-        audio = np.tanh(audio * 1.2) * 0.9                # gentle limiter
+    if cfg.get("music", True):
+        music = shorts_music.compose(t0, style=style, seed_text=os.path.basename(out_base))
+        duck = np.ones(len(music))                    # dip the music under each big moment
+        for t, kind, v in events:
+            if kind in ("hit", "chime", "womp", "coin"):
+                i0 = int(t * SR)
+                w = np.ones(int(SR * 0.7))
+                w[: int(SR * 0.05)] = np.linspace(1, 0.45, int(SR * 0.05))
+                w[int(SR * 0.05): int(SR * 0.4)] = 0.45
+                w[int(SR * 0.4):] = np.linspace(0.45, 1, len(w) - int(SR * 0.4))
+                i1 = min(len(duck), i0 + len(w))
+                if i0 < len(duck):
+                    duck[i0:i1] = np.minimum(duck[i0:i1], w[: i1 - i0])
+        m = len(music)
+        audio[:m] += music * duck * cfg.get("music_volume", 0.35)
+    audio = np.tanh(audio * 1.2) * 0.9                    # gentle limiter
     wav = os.path.join(work, "sound.wav")
     with wave.open(wav, "wb") as w:
         w.setnchannels(1)
@@ -670,7 +687,8 @@ def build(cfg, scenes, out_base, cover_index):
     out = out_base + ".mp4"
     tmp = out_base + ".part.mp4"
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", joined, "-i", wav, "-map", "0:v", "-map", "1:a",
-                    "-c:v", "copy", "-c:a", "aac", "-b:a", "128k", "-ac", "2", "-shortest", "-movflags", "+faststart", tmp], check=True)
+                    "-c:v", "copy", "-af", "loudnorm=I=-14:TP=-1.5:LRA=11", "-ar", "44100",
+                    "-c:a", "aac", "-b:a", "160k", "-ac", "2", "-shortest", "-movflags", "+faststart", tmp], check=True)
     os.replace(tmp, out)
     if cover is not None:
         cover.save(out_base + "-cover.png")
@@ -689,6 +707,10 @@ def caption(cfg, fmt, league, when, lines):
 
 
 # ============================================================ formats
+def music_style(cfg, fmt):
+    return cfg.get("music_styles", {}).get(fmt, "hype")
+
+
 def make(cfg, fmt, league, games, out_dir, group=None, today=None):
     os.makedirs(out_dir, exist_ok=True)
     if fmt == "teams":
@@ -705,7 +727,7 @@ def make(cfg, fmt, league, games, out_dir, group=None, today=None):
         scenes = [scene_intro(cfg, "teams", league, f"{label} SEASON", len(rows), mood="hype"),
                   scene_teams(cfg, rows, worst, league, label), scene_outro(cfg)]
         base = os.path.join(out_dir, f"teams-{league}-{label}")
-        build(cfg, scenes, base, cover_index=1)
+        build(cfg, scenes, base, cover_index=1, style=music_style(cfg, "teams"))
         lines = [f"Which {LEAGUE_PLAIN[league]} teams play the most entertaining games? Ranked by average Thrill Score "
                  "(how close, tense and dramatic their games are). No scores, no spoilers.", ""]
         lines += [f"#{i + 1}  {r['name']}  ({r['avg']:.0f})" for i, r in enumerate(top)]
@@ -733,7 +755,7 @@ def make(cfg, fmt, league, games, out_dir, group=None, today=None):
             else:
                 scenes.append(scene_card(cfg, g, {0: "#1  WATCH THIS"}.get(from_end, f"#{from_end + 1}"), league, when))
         scenes.append(scene_outro(cfg))
-        build(cfg, scenes, base, cover_index=len(scenes) - 2)
+        build(cfg, scenes, base, cover_index=len(scenes) - 2, style=music_style(cfg, "worth"))
         lines = [f"Missed the {LEAGUE_PLAIN[league]}? Here's what's worth the replay, rated by how close, tense and "
                  "dramatic each game was. No scores, no spoilers.", ""]
         lines += [f"{g['score']}  {g.get('awayShort') or g['away']} at {g.get('homeShort') or g['home']}  ({g['label']})" for g in reversed(order)]
@@ -746,7 +768,7 @@ def make(cfg, fmt, league, games, out_dir, group=None, today=None):
         for i, g in enumerate(picks):
             scenes.append(scene_card(cfg, g, f"GAME {i + 1} OF {len(picks)}", league, when, guess_pause=pause))
         scenes.append(scene_outro(cfg))
-        build(cfg, scenes, base, cover_index=1)
+        build(cfg, scenes, base, cover_index=1, style=music_style(cfg, "guess"))
         lines = ["How close was your guess? Thrill Scores rate how close, tense and dramatic a game was, "
                  "from 0 to 100. No scores, no spoilers.", ""]
         lines += [f"{g.get('awayShort') or g['away']} at {g.get('homeShort') or g['home']}: {g['score']}" for g in picks]
@@ -756,7 +778,7 @@ def make(cfg, fmt, league, games, out_dir, group=None, today=None):
         scenes = [scene_intro(cfg, "snooze", league, when, len(pool), mood="sleep"),
                   scene_card(cfg, g, "SNOOZEFEST", league, when, rank_color=MUTED, dur=6.2),
                   scene_outro(cfg)]
-        build(cfg, scenes, base, cover_index=1)
+        build(cfg, scenes, base, cover_index=1, style=music_style(cfg, "snooze"))
         lines = [f"The least exciting {LEAGUE_PLAIN[league]} game of {when}: "
                  f"{g.get('awayName') or g['away']} at {g.get('homeName') or g['home']}, Thrill Score {g['score']}. "
                  "Save your evening for something better. No scores, no spoilers."]
