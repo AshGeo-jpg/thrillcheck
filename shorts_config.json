@@ -12,10 +12,10 @@
   },
   "sound": true,
   "sound_volume": 0.8,
-  "music": true,
+  "music": false,
   "music_volume": 0.45,
   "music_styles": {
-    "_help": "Original music made in code (no copyright claims). Styles: hype, gameshow, lazy.",
+    "_help": "Built-in music made in code (off by default; add trending music in the app instead). Styles: hype, gameshow, lazy.",
     "worth": "hype",
     "guess": "gameshow",
     "teams": "hype",
